@@ -1,3 +1,18 @@
 .name{
     color: red;
 }
+
+ul {
+    margin: 0;
+}
+ul li:first-child{
+    /*color: red;*/
+    margin-left: -20px;
+}
+ul li{
+    text-decoration: none;
+    list-style: none;
+    display: inline-block;
+    border: black 1px solid;
+    padding: 5px 10px;
+}

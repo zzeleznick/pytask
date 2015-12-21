@@ -19,7 +19,20 @@
       <div class='col-lg-12' id="main">
         {% if TL %}
           {% for k in TL.tasks %}
-          <div class="tasks"> {{TL.tasks[k]}} </div>
+          <div class="editable" contenteditable="true">
+          <style scoped>
+            .editable { margin-bottom: 10px; }
+            [contenteditable="true"] {
+              padding: 10px; outline: 2px dashed #CCC; }
+            [contenteditable="true"]:hover {
+              outline: 2px dashed #0090D2; }
+          </style>
+           <ul class="tasks">
+           <li class="priority"> {{TL.tasks[k].priority.value}} </li>
+           <li class="desc"> {{TL.tasks[k].description}} </li>
+           <li class="due"> {{TL.tasks[k].due.rep}} </li>
+           </ul>
+          </div>
           {%  endfor %}
        {%  endif %}
       </div>
