@@ -108,6 +108,7 @@ class TaskList(object):
                 desc = raw_input('Enter the new description:\n')
                 if checkHelp(desc):
                     print 'Write what you need to do!'
+                    desc = ''
                     continue
                 elif checkExit(desc):
                     exit()
@@ -120,6 +121,7 @@ class TaskList(object):
                 level = raw_input('Enter the priority level:\n')
                 if checkHelp(level):
                     print 'Write how hard the task is on a scale of 1-5.'
+                    level = ''
                     continue
                 elif checkExit(level):
                     exit()
@@ -132,6 +134,7 @@ class TaskList(object):
                 due = raw_input("Enter in how many days-hours-mins it's due:\n")
                 if checkHelp(due):
                     print "Write how many days-hours-mins it's due"
+                    due = ''
                     continue
                 elif checkExit(due):
                     exit()

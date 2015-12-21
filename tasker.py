@@ -141,6 +141,7 @@ def edit():
         idx = raw_input('Which task would you like to edit:\n')
         if checkHelp(idx):
             print 'Select the (id) of the task that you want to edit'
+            idx = ''
             out = '\n'.join(['%s (%d)' % (lst.tasks[t], i) for i,t in enumerate(lst.tasks)])
             print 'All tasks:\n', out
         elif checkExit(idx):
