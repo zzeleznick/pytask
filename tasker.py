@@ -77,7 +77,7 @@ def parse_cmd_options():
     # Handling Options #
     VERBOSE = args.verbose
 
-def get():
+def get(colored = True):
     '''
     gets all active tasks
     '''
@@ -86,7 +86,7 @@ def get():
     tasks = []
     for line in tasksRaw:
         ts, desc, val, dead = line
-        tasks += [Task(desc, plevel = val, date = ts, due = dead)]
+        tasks += [Task(desc, plevel = val, date = ts, due = dead, colored = colored)]
     lst = TaskList(tasks)
     return lst
 

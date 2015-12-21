@@ -17,7 +17,7 @@ mylevel = lambda x: levels[sorted(edges + [x]).index(x)]
 
 class PriorityLevel(object):
     """docstring for PriorityLevel"""
-    def __init__(self, val):
+    def __init__(self, val, colored = True):
         # super(PriorityLevel, self).__init__()
         # input value can 0-5,
         # { 0: [0, blue, unset], 1: [1-2, green, easy],
@@ -29,13 +29,17 @@ class PriorityLevel(object):
         val = min(max(val, 0), high)
         self.value = (val) % (high+1)
         self.color = mycolor(self.value)
+        self.colored = colored
         self.level = mylevel(self.value)
         self.rep = '%s %d' % (self.level, self.value)
         self.hrep = '*' * (self.value) + ' ' * (high - self.value)
     def __repr__(self):
         return '<Label: %s>' % self.rep
     def __str__(self):
-        return colored(self.hrep, self.color) # self.hrep
+        if self.colored:
+            return colored(self.hrep, self.color)
+        else:
+            return self.hrep
 
 class Timestamp(object):
     """docstring for Timestamp"""
@@ -223,10 +227,10 @@ class TaskList(object):
 
 class Task(object):
     """docstring for Task"""
-    def __init__(self, desc, plevel = 0, date = None, due = None, tags = []):
+    def __init__(self, desc, plevel = 0, date = None, due = None, colored = False, tags = []):
         #super(Task, self).__init__()
         self.description = desc
-        self.priority = PriorityLevel(plevel)
+        self.priority = PriorityLevel(plevel, colored)
         self.color = self.priority.color
         self.hash = lambda: self.__hash__()
         def parse(msg):
@@ -264,7 +268,7 @@ class Task(object):
     def __repr__(self):
         return '<Task: %s>' % self.rep
     def __str__(self):
-        return colored(self.rep, self.color)
+        return self.rep
 
 '''
 class TaskList(object):
