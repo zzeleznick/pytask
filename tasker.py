@@ -8,7 +8,7 @@ import argparse
 from termcolor import colored # coloring yay
 # internals
 from classes import *
-from utils import build
+from utils import *
 '''
 Program for running todo app
 '''
@@ -32,7 +32,7 @@ def parse_cmd_options():
 
     group.add_argument("-l", "--list", action="store_true",
                         required = False, default = False,
-                        help='Adds a task to the TaskList')
+                        help='Shows the TaskList')
     group.add_argument("-c", "--count", action="store_true",
                         required = False, default = False,
                         help='Displays number of active Tasks')
@@ -47,20 +47,29 @@ def parse_cmd_options():
                         help='Deletes an existing task')
 
     args = parser.parse_args()
-    print args
-    flags = args.flags.strip().upper()
+    # print args
+    flags = args.flags
+    if flags:
+        flags = flags.strip().upper()
     if args.list or flags == 'LIST':
         show()
     elif args.count or flags == 'COUNT':
-        count()
-    elif args.add or  flags == 'ADD':
+        print '%d Tasks found' % count()
+    elif args.add or flags == 'ADD':
         add()
-    elif args.edit or  flags == 'EDIT':
+    elif args.edit or flags == 'EDIT':
         edit()
-    elif args.remove or  flags == 'REMOVE':
-        pass
+    elif args.remove or flags == 'REMOVE':
+        remove()
     elif flags == 'COUNT' or flags == 'DROP':
-        drop()
+        proceed = raw_input("Warning. About to delete all tasks. Enter 'y' to continue\n")
+        if proceed.strip().upper() == 'Y':
+            print 'Deleting %d tasks ' % count()
+            drop()
+    elif flags == 'H' or 'HELP' in flags:
+        parser.print_help()
+    else:
+        print "Flag '%s' not found" % flags
     global VERBOSE
 
     # Handling Options #
@@ -104,7 +113,7 @@ def count():
     >>> tasker.py count
     '''
     lst = get()
-    print 'Found %d tasks' % lst.count()
+    return lst.count()
 
 def add():
     '''
@@ -122,17 +131,20 @@ def edit():
     >>> tasker.py edit
     '''
     lst = get()
-    idx = raw_input('Which task would you like to edit:\n')
-    if idx:
-        try: idx = int(idx)
-        except Exception, e: idx = ''
+    idx = ''
+    helptext = '\n'.join(["About to enter EDIT Mode...", "Enter:", "\t'h' or 'help' for help",
+            "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
+    print helptext
     while idx == '':
-        out = '\n'.join(['%s (%d)' % (lst.tasks[t], i) for i,t in enumerate(lst.tasks)])
-        print 'All tasks:\n', out
         idx = raw_input('Which task would you like to edit:\n')
-        cmd = idx.strip().upper()
-        if cmd == 'X' or 'quit' in cmd:
+        if checkHelp(idx):
+            print 'Select the (id) of the task that you want to edit'
+            out = '\n'.join(['%s (%d)' % (lst.tasks[t], i) for i,t in enumerate(lst.tasks)])
+            print 'All tasks:\n', out
+        elif checkExit(idx):
             exit()
+        elif checkUndo(idx):
+            idx = ''
         if idx:
             try: idx = int(idx)
             except Exception, e: idx = ''
@@ -140,6 +152,25 @@ def edit():
     drop()
     write(lst)
 
+def remove():
+    lst = get()
+    idx = raw_input('Which task would you like to delete:\n')
+    if idx:
+        try: idx = int(idx)
+        except Exception, e: idx = ''
+    while idx == '':
+        out = '\n'.join(['%s (%d)' % (lst.tasks[t], i) for i,t in enumerate(lst.tasks)])
+        print 'All tasks:\n', out
+        idx = raw_input('Which task would you like to delete:\n')
+        cmd = idx.strip().upper()
+        if cmd == 'X' or cmd == 'Q' or 'QUIT' in cmd:
+            exit()
+        if idx:
+            try: idx = int(idx)
+            except Exception, e: idx = ''
+    lst.remove_task(idx)
+    drop()
+    write(lst)
 
 def test():
     t = Timestamp()

@@ -6,7 +6,7 @@ import re
 from termcolor import colored # coloring yay
 from datetime import datetime as dt
 # internals
-# from utils import *
+from utils import *
 
 EPOCH = dt.fromtimestamp(0)
 colors = ["blue", "green", "yellow", "red"]
@@ -98,37 +98,44 @@ class TaskList(object):
         else:
             t1 = oldTask
             vals = [t1.description, t1.priority.value, t1.due.hrep, t1.timestamp.hrep]
-        truth = lambda x: True if x else False
         complete = truth(desc) and truth(level) and truth(due)
-        CMD = lambda x: x.strip().upper()
-        checkExit = lambda x: 1 if (CMD(x) == 'X' or CMD(x) == 'Q' or 'QUIT' in CMD(x)) else 0
-        checkUndo =  lambda x: 1 if (CMD(x) == 'B' or CMD(x) == 'U' or 'UNDO' in CMD(x)) else 0
+        helptext = '\n'.join(["Using", "\tDescription: %s" % vals[0],
+                        "\tLevel: %s" % vals[1], "\tDue: %s"  % vals[2]])
+        print helptext
         while not complete:
             complete = truth(desc) and truth(level) and truth(due)
-            print 'Using description:%s, level:%s, due:%s' % (desc, level, due)
             if not desc or not desc.strip():
                 desc = raw_input('Enter the new description:\n')
-                if checkExit(desc):
+                if checkHelp(desc):
+                    print 'Write what you need to do!'
+                    continue
+                elif checkExit(desc):
                     exit()
-                if checkUndo(desc):
+                elif checkUndo(desc):
                     due = ''
                     continue
                 if not truth(desc):
                     desc = vals[0]
             if not level:
                 level = raw_input('Enter the priority level:\n')
-                if checkExit(level):
+                if checkHelp(level):
+                    print 'Write how hard the task is on a scale of 1-5.'
+                    continue
+                elif checkExit(level):
                     exit()
-                if checkUndo(level):
+                elif checkUndo(level):
                     desc = ''
                     continue
                 try: level = int(level)
                 except Exception, e: level = vals[1]
             if not due:
                 due = raw_input("Enter in how many days-hours-mins it's due:\n")
-                if checkExit(due):
+                if checkHelp(due):
+                    print "Write how many days-hours-mins it's due"
+                    continue
+                elif checkExit(due):
                     exit()
-                if checkUndo(due):
+                elif checkUndo(due):
                     level = 0
                     continue
                 if not truth(due):
@@ -137,10 +144,11 @@ class TaskList(object):
         return out
 
     def add_task(self, text = '', val = 0, due = ''):
-        truth = lambda x: True if x else False
         complete = truth(text) and truth(val) and truth(due)
         if not complete:
-            print "Entering Add Mode.\nEnter 'quit' to exit, or 'undo' to reset."
+            helptext = '\n'.join(["Entering ADD Mode...", "Enter:", "\t'h' or 'help' for help",
+            "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
+            print helptext
             t2 =  self.gen_task(text, val, due)
         else:
             try:
@@ -160,12 +168,13 @@ class TaskList(object):
             # raise ValueError("Task ID %d out of range(%d)" % (taskID, self.count()) )
             print "Task ID %d out of range(%d)" % (taskID, self.count())
             exit()
-        truth = lambda x: True if x else False
-        incomplete = truth(desc) and truth(level) and truth(due)
+        complete = truth(desc) and truth(level) and truth(due)
         h = self.tasks.keys()[taskID]
         t1 = self.tasks[h]
-        if incomplete:
-            print "Entering Edit Mode.\nEnter 'quit' to exit, or 'undo' to reset."
+        if not complete:
+            helptext = '\n'.join(["Entering EDIT Mode...", "Enter:", "\t'h' or 'help' for help",
+            "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
+            print helptext
             t2 =  self.gen_task(desc, level, due, oldTask = t1)
         else:
             try:
@@ -178,10 +187,7 @@ class TaskList(object):
         self.update_state()
     def remove_task(self, taskID):
         if taskID < self.count():
-            h = self.tasks.keys()[taskID]
-            task = self.tasks[h]
-            self.tasks.pop(h)
-            self.update_state()
+            self.__del__(taskID)
     def __sub__(self, task):
         if type(task) == Task:
             if task.hash() in self.tasks:
@@ -201,6 +207,12 @@ class TaskList(object):
     def __isub__(self, task):
         self.__sub__(task)
         return self
+    def __del__(self, taskID):
+        h = self.tasks.keys()[taskID]
+        task = self.tasks[h]
+        self.tasks.pop(h)
+        print 'Succesfully removed task\n%s\n' % (task)
+        self.update_state()
     def __repr__(self):
         return '<TaskList %s>' % self.tasks
     def __str__(self):
