@@ -36,6 +36,21 @@ class DataStore(object):
             out = [row for row in reader] # list of list of strings
         return out
 
+    def dumpTasks(self):
+        fname = self.DATA_FOLDER + self.CURRENT_TASKS
+        f = open(fname, 'w')
+        f.close()
+
+    def writeTasks(self, taskList):
+        fname = self.DATA_FOLDER + self.CURRENT_TASKS
+        with open(fname, 'a') as csvfile:
+            zwriter = csv.writer(csvfile, delimiter='@',
+                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            for idx, key in enumerate(taskList.tasks):
+                t1 = taskList.tasks[key]
+                desc, level, due, created = [t1.description, t1.priority.value, t1.due.hrep, t1.timestamp.hrep]
+                zwriter.writerow([created] + [desc] + [level] + [due])
+
     def writeTask(self, desc, plevel, created, due):
         fname = self.DATA_FOLDER + self.CURRENT_TASKS
         with open(fname, 'a') as csvfile:

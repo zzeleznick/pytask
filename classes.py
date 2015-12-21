@@ -92,19 +92,52 @@ class TaskList(object):
         # [self.tasks.update({i: t}) for i,t in enumerate(lst)]
         [self.tasks.update({t.hash(): t}) for i,t in enumerate(lst)]
         self.update_state()
-    def edit_task(self, taskID, priority = 0, desc = None):
+    def edit_task(self, taskID, desc = '', level = 0, due = ''):
+        print "Entering Edit Mode.\nEnter 'quit' to exit, or 'undo' to reset."
+        # steps:
+        # 0: select ID
+        # 1: description (or unchanged)
+        # 2: level (or unchanged)
+        # 3: due (or unchanged)
         if taskID >= self.count():
-            raise ValueError("Task ID %d out of range(%d)" % (taskID, self.count()) )
-        if not desc:
-            desc = raw_input('Enter the new description:\n')
-        if not priority:
-            plevel = raw_input('Enter the priority level:\n')
-            try:
-                plevel = int(plevel)
-            except Exception, e:
-                plevel = 0
+            # raise ValueError("Task ID %d out of range(%d)" % (taskID, self.count()) )
+            print "Task ID %d out of range(%d)" % (taskID, self.count())
+            exit()
+        incomplete = True
         h = self.tasks.keys()[taskID]
-        self.tasks[h] = Task(desc, plevel)
+        t1 = self.tasks[h]
+        vals = [t1.description, t1.priority.value, t1.due.hrep, t1.timestamp.hrep]
+        truth = lambda x: True if x else False
+        while incomplete:
+            incomplete = truth(desc) and truth(level) and truth(due)
+            if not desc:
+                desc = raw_input('Enter the new description:\n')
+                if not truth(desc): desc = vals[0]
+            if not level:
+                level = raw_input('Enter the priority level:\n')
+                cmd = level.strip().upper()
+                if cmd == 'X' or 'QUIT' in cmd:
+                    exit()
+                elif cmd == 'B' or cmd == 'U' or 'UNDO' in cmd or 'BACK' in cmd:
+                    desc = ''
+                    continue
+                else:
+                    try: level = int(level)
+                    except Exception, e: level = vals[1]
+            if not due:
+                due = raw_input("Enter in how many days-hours-mins it's due:\n")
+                cmd = due.strip().upper()
+                if not truth(due):
+                    due = vals[2]
+                else:
+                    if cmd == 'X' or 'QUIT' in cmd:
+                        exit()
+                    elif cmd == 'B' or cmd == 'U' or 'UNDO' in cmd or 'BACK' in cmd:
+                        level = 0
+                        continue
+        t2 = Task(desc = desc, plevel=level, date= vals[3], due=due)
+        self.tasks[h] = t2
+        print 'Succesfully updated task\nOLD: %s\nNEW: %s' % (t1, t2)
         self.update_state()
     def remove_task(self, taskID):
         if taskID < self.count():
@@ -143,6 +176,23 @@ class Task(object):
         self.priority = PriorityLevel(plevel)
         self.color = self.priority.color
         self.hash = lambda: self.__hash__()
+        def parse(msg):
+            # '1d0h30m' -> 1, 0, 30
+            nd = re.compile(r'\D')
+            lst  = nd.split(msg.strip())
+            d,h,m,idx = 0,0,0,0
+            out = [d,h,m]
+            possible = [el for idx, el in enumerate(lst) if el and idx < len(out)]
+            for el in possible:
+                try:
+                    val = int(el)
+                except Exception, e:
+                    pass
+                else:
+                    out[idx] = val
+                    idx += 1
+            return out
+
         if not date:
             self.timestamp = Timestamp()
         else:
@@ -155,26 +205,9 @@ class Task(object):
                 d = dt.strptime(date, "%a %b %d, %Y at %I:%M %p")
                 self.due =  Timestamp(d)
             else:
-                offsets = self.parse(due)
+                offsets = parse(due)
                 self.due = Timestamp(None, *offsets)
         self.rep = '%s  %s  Due: %s' % (self.priority, self.description, self.due.hrep)
-
-    def parse(msg):
-        # '1d0h30m' -> 1, 0, 30
-        nd = re.compile(r'\D')
-        lst  = nd.split(msg.strip())
-        d,h,m,idx = 0,0,0,0
-        out = [d,h,m]
-        possible = [el for idx, el in enumerate(lst) if el and idx < len(out)]
-        for el in possible:
-            try:
-                val = int(el)
-            except Exception, e:
-                pass
-            else:
-                out[idx] = val
-                idx += 1
-        return out
     def __repr__(self):
         return '<Task: %s>' % self.rep
     def __str__(self):
