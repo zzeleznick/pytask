@@ -1,18 +1,32 @@
+.tasks{
+    margin-bottom: 5px;
+}
+.task-container{
+    width: 100%;
+}
 .name{
     color: red;
 }
 
 ul {
     margin: 0;
+    padding: 5px 10px;
 }
 ul li:first-child{
     /*color: red;*/
-    margin-left: -20px;
+    margin-left: 0px;
 }
 ul li{
     text-decoration: none;
     list-style: none;
     display: inline-block;
     border: black 1px solid;
-    padding: 5px 10px;
+    padding: 8px 10px;
 }
+
+.editable { margin-bottom: 10px; }
+[contenteditable="true"] {
+    padding: 5px 10px;
+    outline: 2px solid rgba(182, 182, 189, 0.54); }
+[contenteditable="true"]:hover {
+    outline: 2px dashed #0090D2; }
