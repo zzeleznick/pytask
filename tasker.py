@@ -18,7 +18,7 @@ def parse_cmd_options():
         usage = "%(prog)s [-h] [-v] [-l | -c | -a | -e | -r] [flags]",
         formatter_class= argparse.RawDescriptionHelpFormatter,
         epilog= '')
-    parser.add_argument("flags", nargs='?', default = None,
+    parser.add_argument("flags", nargs='?', default = '',
                         help='additonal flags')
     """
     parser.add_argument("keywords", nargs='+', default = ['the'],
@@ -68,6 +68,8 @@ def parse_cmd_options():
             drop()
     elif flags == 'H' or 'HELP' in flags:
         parser.print_help()
+    elif not flags:
+        show()
     else:
         print "Flag '%s' not found" % flags
     global VERBOSE
