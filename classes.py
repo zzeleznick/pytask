@@ -1,11 +1,19 @@
 import sys
 import time
 import copy as cp
+import re
 
 from termcolor import colored # coloring yay
 from datetime import datetime as dt
 # internals
-from utils import *
+# from utils import *
+
+EPOCH = dt.fromtimestamp(0)
+colors = ["blue", "green", "yellow", "red"]
+levels = ["Default", "Easy", "Medium", "Hard"]
+edges =  [0, 2, 3, 5]
+mycolor = lambda x: colors[sorted(edges + [x]).index(x)]
+mylevel = lambda x: levels[sorted(edges + [x]).index(x)]
 
 class PriorityLevel(object):
     """docstring for PriorityLevel"""
@@ -62,6 +70,7 @@ class TaskList(object):
         self.repgen = lambda: '\n'.join(['%s' % (self.tasks[t]) for i,t in enumerate(self.tasks)])
         self.set_tasks(tasks)
         self.add = self.__add__
+        self.remove = self.__sub__
         # should contain the id numbers of all tasks with said label
         # tasks can share labels, not 1:1, but id's should be unique
         self.count = lambda: len(self.tasks)
@@ -126,17 +135,6 @@ class TaskList(object):
     def __str__(self):
         return '%s' % self.rep
 
-'''
-class TaskList(object):
-    """docstring for TaskList"""
-    __tasks = {} # shared class variable
-    __labels = []
-
-    @staticmethod
-    def countTasks():
-        return len(TaskList.__tasks)
-'''
-
 class Task(object):
     """docstring for Task"""
     def __init__(self, desc, plevel = 0, date = None, due = None, tags = []):
@@ -157,10 +155,38 @@ class Task(object):
                 d = dt.strptime(date, "%a %b %d, %Y at %I:%M %p")
                 self.due =  Timestamp(d)
             else:
-                offsets = parseDue(due)
+                offsets = self.parse(due)
                 self.due = Timestamp(None, *offsets)
         self.rep = '%s  %s  Due: %s' % (self.priority, self.description, self.due.hrep)
+
+    def parse(msg):
+        # '1d0h30m' -> 1, 0, 30
+        nd = re.compile(r'\D')
+        lst  = nd.split(msg.strip())
+        d,h,m,idx = 0,0,0,0
+        out = [d,h,m]
+        possible = [el for idx, el in enumerate(lst) if el and idx < len(out)]
+        for el in possible:
+            try:
+                val = int(el)
+            except Exception, e:
+                pass
+            else:
+                out[idx] = val
+                idx += 1
+        return out
     def __repr__(self):
         return '<Task: %s>' % self.rep
     def __str__(self):
         return colored(self.rep, self.color)
+
+'''
+class TaskList(object):
+    """docstring for TaskList"""
+    __tasks = {} # shared class variable
+    __labels = []
+
+    @staticmethod
+    def countTasks():
+        return len(TaskList.__tasks)
+'''

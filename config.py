@@ -1,6 +1,7 @@
 # file for creating config
 import os
 import csv
+
 class DataStore(object):
     """docstring for PriorityLevel"""
     def __init__(self, vals):

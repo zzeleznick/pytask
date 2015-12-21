@@ -14,64 +14,54 @@ Program for running todo app
 '''
 def parse_cmd_options():
     parser = argparse.ArgumentParser(
-        description="Dynamically creates a supercut from a video and subtitle pairing\nwhere the keyword(s) of interest are spoken",
-        usage = "%(prog)s [-h] [-v] [-p | -w | -s] [videoName] [keywords]",
+        description="A handy dandy minimal TODO app",
+        usage = "%(prog)s [-h] [-v] [-a | -e | -d] [list]",
         formatter_class= argparse.RawDescriptionHelpFormatter,
-        epilog= listVideoFiles() )
-
-    parser.add_argument("filename",  metavar= 'video', nargs='?', default = None,
-                        help='The video to process')
+        epilog= '')
+    parser.add_argument("list", nargs='+', default = None,
+                        help='additonal flags')
+    """
     parser.add_argument("keywords", nargs='+', default = ['the'],
                         help='The words to find in the video')
+    """
     parser.add_argument("-v", "--verbose", action="store_true",
                         required = False, default = False,
-                        help='Displays the phrases that contain the keyword(s) if True')
+                        help='Adds verbosity')
 
     group = parser.add_mutually_exclusive_group()
 
-    group.add_argument("-p", "--phrase", action="store_true",
+    group.add_argument("-a", "--add", action="store_true",
                         required = False, default = False,
-                        help='Captures the entire phrase')
-    group.add_argument("-w", "--word", action="store_true",
+                        help='Adds a task to the TaskList')
+    group.add_argument("-e", "--edit", action="store_true",
                         required = False, default = False,
-                        help='Refines the bounds to include just the word')
-    group.add_argument("-s", "--speech", action="store_true",
+                        help='Edits an existing task')
+    group.add_argument("-d", "--delete", action="store_true",
                         required = False, default = False,
-                        help='Creates a fake speech from the keywords')
+                        help='Deletes an existing task')
 
     args = parser.parse_args()
     print args
+    if args.list:
+        show()
 
     global VERBOSE
-    global WORDS
-    global MODE_NAME
-
-    videoName = args.filename
-    WORDS  = args.keywords
-    options = [args.phrase, args.word, args.speech]
-
-    # Check if input arguments are valid #
-    valid = testUserInput(videoName)
-    if not valid:
-        print 'Try a video file from the list [%s] ' % listVideoFiles()
-        exit()
-    # End input validation #
 
     # Handling Options #
     VERBOSE = args.verbose
 
-    if True in options:
-        MODE = options.index(True)
-    else:
-        MODE = 0
+    # return videoName, WORDS, MODE_NAME
+def show():
+    ds = build()
+    tasksRaw = ds.load()
+    tasks = []
+    for line in tasksRaw:
+        if line:
+            ts, desc, val, dead = line
+            tasks += [Task(desc, plevel = val, date = ts, due = dead)]
+    lst = TaskList(tasks)
+    lst.zprint(arg = 'priority', rev=True)
 
-    optionNames = ['phrases', 'words', 'speech']
-    MODE_NAME = optionNames[MODE]
-
-    print "Finding the words: %s\nVideo Name: %s\nOption: %s" % (WORDS, videoName, MODE_NAME)
-    # End Handling Options #
-
-    return videoName, WORDS, MODE_NAME
 def count():
     '''
     Counts the number of active tasks
@@ -119,7 +109,6 @@ def test2():
     tasks = []
     for line in tasksRaw:
         if line:
-            print line
             ts, desc, val, dead = line
             tasks += [Task(desc, plevel = val, date = ts, due = dead)]
     lst = TaskList(tasks)
@@ -129,6 +118,8 @@ def test2():
     lst.zprint(arg = 'priority', rev=True)
 
 if __name__ == '__main__':
+    parse_cmd_options()
+    '''
     args = sys.argv[1:]
     if not args:
         ds = build()
@@ -142,3 +133,4 @@ if __name__ == '__main__':
         lst.zprint(arg = 'priority', rev=True)
     else:
         test2()
+    '''
