@@ -1,14 +1,6 @@
+# file for creating config
 import os
-'''
-#example config
-DATA_FOLDER = 'data/'
-CURRENT_TASKS = 'CURRENT.csv'
-COMPLETED_TASKS = 'COMPLETED.csv'
-DELETED_TASKS = 'DELETED.csv'
-'''
-# editable
-# VARS = ['DATA_FOLDER', 'CURRENT_TASKS', 'COMPLETED_TASKS', 'DELETED_TASKS']
-# end editable
+import csv
 class DataStore(object):
     """docstring for PriorityLevel"""
     def __init__(self, vals):
@@ -19,6 +11,8 @@ class DataStore(object):
         self.DELETED_TASKS = zvals[3]
         self.getVals = lambda: [self.DATA_FOLDER, self.CURRENT_TASKS,
                                 self.COMPLETED_TASKS, self.DELETED_TASKS]
+        self.load = self.loadCurrentTasks
+        self.write = self.writeTask
     def build(self, vals):
         if vals and type(vals) == list and len(vals) >= 4:
             VALS = vals
@@ -34,5 +28,24 @@ class DataStore(object):
                 f.close()
         return VALS
 
+    def loadCurrentTasks(self):
+        fname = self.DATA_FOLDER + self.CURRENT_TASKS
+        with open(fname, 'rb') as infile:
+            reader = csv.reader(infile, delimiter='@')
+            out = [row for row in reader] # list of list of strings
+        return out
+
+    def writeTask(self, desc, plevel, created, due):
+        fname = self.DATA_FOLDER + self.CURRENT_TASKS
+        with open(fname, 'a') as csvfile:
+            zwriter = csv.writer(csvfile, delimiter='@',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            zwriter.writerow([created] + [desc] + [plevel] + [due])
+    def __repr__(self):
+        return '<DS %s | %s>' % (self.DATA_FOLDER, self.CURRENT_TASKS)
+    def __str__(self):
+        return repr(self)
+
 def buildConfig(zvals = []):
-    return DataStore(zvals)
+    ds = DataStore(zvals)
+    return ds

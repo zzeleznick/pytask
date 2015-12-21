@@ -13,38 +13,19 @@ mylevel = lambda x: levels[sorted(edges + [x]).index(x)]
 
 def build(zvals = []):
     ds = buildConfig(zvals)
-    return ds.getVals()
-
-def loadCurrentTasks(fname = None, buildArr = []):
-    if not fname:
-        DATA_FOLDER, CURRENT_TASKS, COMPLETED_TASKS, DELETED_TASKS = build(buildArr)
-        fname = DATA_FOLDER + CURRENT_TASKS
-    with open(fname, 'rb') as infile:
-        reader = csv.reader(infile, delimiter='@')
-        out = [row for row in reader] # list of list of strings
-    return out
-
-def writeTask(desc, plevel, created, due, fname = None, buildArr = []):
-    if not fname:
-        DATA_FOLDER, CURRENT_TASKS, COMPLETED_TASKS, DELETED_TASKS = build(buildArr)
-        fname = DATA_FOLDER + CURRENT_TASKS
-    with open(fname, 'a') as csvfile:
-      zwriter = csv.writer(csvfile, delimiter='@',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-      zwriter.writerow([created] + [desc] + [plevel] + [due])
+    return ds
 
 def test0():
     arr1 = ['derp/', '1.csv', '2.csv', '3.csv']
     test(arr1)
 
 def test(arr = []):
-    DATA_FOLDER, CURRENT_TASKS, COMPLETED_TASKS, DELETED_TASKS = build(arr)
-    tasks = loadCurrentTasks(fname = None, buildArr = arr)
-    # if type(tasks[0]) == list:
+    ds = build(arr)
+    tasks = ds.load()
     o1 = '\n'.join([' '.join([c for c in row]) for row in tasks])
     print 'Original File:\n', o1
-    writeTask('test', '1', 'now', 'later', fname = None, buildArr = arr)
-    tasks = loadCurrentTasks(fname = None, buildArr = arr)
+    ds.write('test', '1', 'now', 'later')
+    tasks = ds.load()
     o2 = '\n'.join([' '.join([c for c in row]) for row in tasks])
     print 'Post File:\n', o2
 
