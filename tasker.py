@@ -54,11 +54,13 @@ def parse_cmd_options():
     elif args.count or flags == 'COUNT':
         count()
     elif args.add or  flags == 'ADD':
-        pass
+        add()
     elif args.edit or  flags == 'EDIT':
         edit()
     elif args.remove or  flags == 'REMOVE':
         pass
+    elif flags == 'COUNT' or flags == 'DROP':
+        drop()
     global VERBOSE
 
     # Handling Options #
@@ -103,6 +105,16 @@ def count():
     '''
     lst = get()
     print 'Found %d tasks' % lst.count()
+
+def add():
+    '''
+    Adds a task
+    >>> tasker.py add
+    '''
+    lst = TaskList() # new instance
+    lst.add_task()
+    ds = build()
+    ds.writeTasks(lst)
 
 def edit():
     '''

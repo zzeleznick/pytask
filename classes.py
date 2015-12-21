@@ -92,8 +92,65 @@ class TaskList(object):
         # [self.tasks.update({i: t}) for i,t in enumerate(lst)]
         [self.tasks.update({t.hash(): t}) for i,t in enumerate(lst)]
         self.update_state()
-    def edit_task(self, taskID, desc = '', level = 0, due = ''):
-        print "Entering Edit Mode.\nEnter 'quit' to exit, or 'undo' to reset."
+    def gen_task(self, desc, level, due, oldTask = None):
+        if type(oldTask) != Task:
+            vals = [None] * 4
+        else:
+            t1 = oldTask
+            vals = [t1.description, t1.priority.value, t1.due.hrep, t1.timestamp.hrep]
+        truth = lambda x: True if x else False
+        complete = truth(desc) and truth(level) and truth(due)
+        CMD = lambda x: x.strip().upper()
+        checkExit = lambda x: 1 if (CMD(x) == 'X' or CMD(x) == 'Q' or 'QUIT' in CMD(x)) else 0
+        checkUndo =  lambda x: 1 if (CMD(x) == 'B' or CMD(x) == 'U' or 'UNDO' in CMD(x)) else 0
+        while not complete:
+            complete = truth(desc) and truth(level) and truth(due)
+            print 'Using description:%s, level:%s, due:%s' % (desc, level, due)
+            if not desc or not desc.strip():
+                desc = raw_input('Enter the new description:\n')
+                if checkExit(desc):
+                    exit()
+                if checkUndo(desc):
+                    due = ''
+                    continue
+                if not truth(desc):
+                    desc = vals[0]
+            if not level:
+                level = raw_input('Enter the priority level:\n')
+                if checkExit(level):
+                    exit()
+                if checkUndo(level):
+                    desc = ''
+                    continue
+                try: level = int(level)
+                except Exception, e: level = vals[1]
+            if not due:
+                due = raw_input("Enter in how many days-hours-mins it's due:\n")
+                if checkExit(due):
+                    exit()
+                if checkUndo(due):
+                    level = 0
+                    continue
+                if not truth(due):
+                    due = vals[2]
+        out = Task(desc = desc, plevel=level, date= vals[3], due=due)
+        return out
+
+    def add_task(self, text = '', val = 0, due = ''):
+        truth = lambda x: True if x else False
+        complete = truth(text) and truth(val) and truth(due)
+        if not complete:
+            print "Entering Add Mode.\nEnter 'quit' to exit, or 'undo' to reset."
+            t2 =  self.gen_task(text, val, due)
+        else:
+            try:
+                t2 = self.gen_task(text, val, due)
+            except Exception, e:
+                print e
+                t2 =  self.gen_task(None, None, None)
+        self + t2
+        return t2
+    def edit_task(self, taskID, desc = None, level = 0, due = None):
         # steps:
         # 0: select ID
         # 1: description (or unchanged)
@@ -103,39 +160,19 @@ class TaskList(object):
             # raise ValueError("Task ID %d out of range(%d)" % (taskID, self.count()) )
             print "Task ID %d out of range(%d)" % (taskID, self.count())
             exit()
-        incomplete = True
+        truth = lambda x: True if x else False
+        incomplete = truth(desc) and truth(level) and truth(due)
         h = self.tasks.keys()[taskID]
         t1 = self.tasks[h]
-        vals = [t1.description, t1.priority.value, t1.due.hrep, t1.timestamp.hrep]
-        truth = lambda x: True if x else False
-        while incomplete:
-            incomplete = truth(desc) and truth(level) and truth(due)
-            if not desc:
-                desc = raw_input('Enter the new description:\n')
-                if not truth(desc): desc = vals[0]
-            if not level:
-                level = raw_input('Enter the priority level:\n')
-                cmd = level.strip().upper()
-                if cmd == 'X' or 'QUIT' in cmd:
-                    exit()
-                elif cmd == 'B' or cmd == 'U' or 'UNDO' in cmd or 'BACK' in cmd:
-                    desc = ''
-                    continue
-                else:
-                    try: level = int(level)
-                    except Exception, e: level = vals[1]
-            if not due:
-                due = raw_input("Enter in how many days-hours-mins it's due:\n")
-                cmd = due.strip().upper()
-                if not truth(due):
-                    due = vals[2]
-                else:
-                    if cmd == 'X' or 'QUIT' in cmd:
-                        exit()
-                    elif cmd == 'B' or cmd == 'U' or 'UNDO' in cmd or 'BACK' in cmd:
-                        level = 0
-                        continue
-        t2 = Task(desc = desc, plevel=level, date= vals[3], due=due)
+        if incomplete:
+            print "Entering Edit Mode.\nEnter 'quit' to exit, or 'undo' to reset."
+            t2 =  self.gen_task(desc, level, due, oldTask = t1)
+        else:
+            try:
+                t2 =  self.gen_task(desc, level, due, oldTask = t1)
+            except Exception, e:
+                print e
+                t2 =  self.gen_task(None, None, None, oldTask = t1)
         self.tasks[h] = t2
         print 'Succesfully updated task\nOLD: %s\nNEW: %s' % (t1, t2)
         self.update_state()
@@ -154,6 +191,7 @@ class TaskList(object):
             self.remove_task(task)
     def __add__(self, task):
         self.tasks.update({self.count()+1: task})
+        print 'Succesfully added task\n%s\n' % (task)
         self.update_state()
     def __radd__(self, task):
         self.__add__(task)
