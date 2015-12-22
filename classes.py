@@ -369,9 +369,9 @@ def test4():
     form.addRequiredField('poop')
     form.addRequiredField('scoop')
     print form
-    vals = form.proccess()
-    print form
-    print 'Values: %s' % vals
+    # vals = form.proccess()
+    # print form
+    # print 'Values: %s' % vals
 
 def test5():
     form = FormFiller()
@@ -380,9 +380,9 @@ def test5():
     form.addRequiredField('val', int, 3, '', fn('val') )
     form.addRequiredField('date')
     print form
-    vals = form.proccess()
-    print form
-    print 'Values: %s' % vals
+    # vals = form.proccess()
+    # print form
+    # print 'Values: %s' % vals
 
 if __name__ == '__main__':
     test5()

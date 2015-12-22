@@ -24,9 +24,9 @@ def test():
     print '----Removing id(2) task-----'
     lst.remove_task(2)
     print '-----2 TASKS----\n', lst, '\n-----END 2 TASKS----'
-    print '----Editing id(0) task-----'
-    lst.edit_task(0)
-    print '-----2 TASKS----\n', lst, '\n-----END 2 TASKS----'
+    # print '----Editing id(0) task-----'
+    # lst.edit_task(0)
+    # print '-----2 TASKS----\n', lst, '\n-----END 2 TASKS----'
     lst.add(t5)
     print '-----3 TASKS----\n', lst, '\n-----END 3 TASKS----'
 
@@ -34,7 +34,7 @@ def test2():
     desc = 'Finish tasklist'
     t1 = Task(desc, 2)
     t2 = Task(desc, 5)
-    vals = [t1.description, t1.priority.value, t1.timestamp, t1.due]
+    vals = [t1.description, t1.priority.value, t1.created, t1.due]
     ds = build()
     ds.write(*vals)
     tasksRaw = ds.load()

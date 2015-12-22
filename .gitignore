@@ -1,3 +1,4 @@
 data/
 derp/
 *.pyc
+.env/
