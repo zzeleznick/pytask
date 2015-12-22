@@ -69,8 +69,6 @@ def test_Add_Subtract(verbose = True):
     with maketest('Make 0-item TaskList'):
         lst = TaskList()
         assert str(lst) == '', 'Null TaskList not Null'
-        # print 'Result:\n', lst
-    print '----End Constructing 0-item TaskList-----'
     with maketest('Add 3 Tasks'):
         if verbose:
             lst.add_task(t1)
@@ -81,8 +79,6 @@ def test_Add_Subtract(verbose = True):
             (lst.iadd(t2)).add(t3)
         expected = '\n'.join(['%s' % (t) for i,t in enumerate([t1,t2,t3])])
         assert str(lst) == expected, "\nResult:\n %s \nExpected:\n %s" % (lst, expected)
-        # print 'Result\n', lst
-    print '----End Adding 3 Tasks-----'
     with maketest('Remove 1st and 3rd Tasks'):
         if verbose:
             lst.remove_task(t3)
@@ -143,6 +139,6 @@ def test_IO():
 
 if __name__ == '__main__':
     v = True #False
-    # test_Add_Subtract(v)
-    # test_Edit(False, v)
+    test_Add_Subtract(v)
+    test_Edit(False, v)
     test_IO()

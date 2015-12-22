@@ -86,7 +86,7 @@ def get(colored = True):
     tasks = []
     for line in tasksRaw:
         ts, desc, val, dead = line
-        tasks += [Task(desc, plevel = val, date = ts, due = dead, colored = colored)]
+        tasks += [Task(desc, value = val, date = ts, due = dead, colored = colored)]
     lst = TaskList(tasks)
     return lst
 
@@ -143,7 +143,7 @@ def getTaskID(action, tasklist):
     idxhelp = '\n'.join(["All tasks:", idxh1, idxh2])
     while idx == null:
         idx = raw_input('Which task would you like to %s \n' % action)
-        checkExit(idx)
+        unsafeExit(idx)
         idx = handleHelp(idx, idxhelp, null)
         idx = handleUndo(idx, idx, null)
         if idx:

@@ -16,8 +16,24 @@ edges =  [0, 2, 3, 5]
 mycolor = lambda x: colors[sorted(edges + [x]).index(x)]
 myname = lambda x: names[sorted(edges + [x]).index(x)]
 
+class Command(object):
+    def __init__(self, text):
+        self.text = text
+    def is_help(self):
+        return checkHelp(self.text)
+    def is_undo(self):
+        return checkUndo(self.text)
+    def is_exit(self):
+        return checkExit(self.text)
+
 class FormFiller(object):
-    """docstring for FormFiller"""
+    """
+    INFO: Class for getting values of required fields w/ types
+    USAGE:
+        - form = FormFiller()
+        - form.addRequiredField(<args>)
+        - values = form.proccess()
+    """
     def __init__(self, null = ''):
         self.null = null
         self.incomplete = self.checkForMissingValues
@@ -65,13 +81,23 @@ class FormFiller(object):
         print self.getPrompt(idx)
 
     def consumeInput(self):
+        """
+        INFO: Main Method to walk users through filling out all required fields.
+        NOTES:
+            - if user input maps to exit, exits
+            - if user input maps to help, displays help
+            - if user input maps to undo, resets last input
+        """
         raw = raw_input()
         idx = self.counter
         key = self.fields.keys()[idx]
-        checkExit(raw)
-        if checkHelp(raw):
+        cmd = Command(raw)
+        if cmd.is_exit():
+            print 'exit triggered'
+            exit()
+        elif cmd.is_help():
             print self.runHelpFnc(idx)
-        elif checkUndo(raw):
+        elif cmd.is_undo():
             self.counter = max(0, self.counter - 1)
             key = self.fields.keys()[self.counter]
             self.fields[key] = self.null
@@ -108,7 +134,6 @@ class PriorityLevel(object):
     __high = 5
     __low = 0
     def __init__(self, val, colored = True):
-        # super(PriorityLevel, self).__init__()
         # input value can 0-5,
         # { 0: [0, blue, unset], 1: [1-2, green, easy],
         # 2: [3, yellow, med],  3: [4-5: red, hard]}
@@ -158,10 +183,10 @@ class Timestamp(object):
 
 class Task(object):
     """docstring for Task"""
-    def __init__(self, desc, plevel = 0, date = None, due = None, colored = True, tags = []):
-        #super(Task, self).__init__()
+    def __init__(self, desc, value = 0, date = None, due = None, colored = True, tags = []):
         self.description = desc
-        self.priority = PriorityLevel(plevel, colored)
+        self.priority = PriorityLevel(value, colored)
+        self.value = self.priority.value
         self.color = self.priority.color
         self.hash = lambda: self.__hash__()
         def parse(msg):
@@ -214,12 +239,12 @@ class Task(object):
 class TaskList(object):
     """docstring for TaskList"""
     def __init__(self, tasks = [], labels = []):
-        #super(TaskList, self).__init__()
         self.rep = ''
         self.labels = labels
         self.tasks = odict() # {}
         self.repgen = lambda: '\n'.join(['%s' % (self.tasks[t]) for i,t in enumerate(self.tasks)])
         self.set_tasks(tasks)
+
         self.add = self.__add__
         self.iadd = self.__iadd__
         self.sub = self.__sub__
@@ -249,8 +274,14 @@ class TaskList(object):
         self.update_state()
 
     def gen_task(self, text, value, due, oldTask = None):
+        """
+        RETURNS: new Task
+        METHOD:
+             uses a FormFiller to build the fields for a new Task
+             with fields: (description, value, due)
+        """
         if type(oldTask) != Task:
-            oldtext, oldvalue, olddue, created = [None] * 4
+            oldtext, oldvalue, olddue, created = [''] * 4
         else:
             t1 = oldTask
             oldtext, oldvalue, olddue, created = [t1.description, t1.priority.value, t1.due.hrep, t1.created.hrep]
@@ -269,15 +300,15 @@ class TaskList(object):
         form.addRequiredField('due', str, olddue, duehelp[0], fn(duehelp[1]) )
         vals = form.proccess()
         text, value, due = vals
-        out = Task(desc = text, plevel=value, date=created, due=due)
+        out = Task(desc = text, value=value, date=created, due=due)
         return out
 
-    def add_task(self, task = None):
+    def add_task(self, task = None, oldTask = None):
         if not task:
             helptext = '\n'.join(["Entering ADD Mode...", "Enter:", "\t'h' or 'help' for help",
             "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
             print helptext
-            task =  self.gen_task(None, None, None)
+            task =  self.gen_task(None, None, None, oldTask)
             self.add(task, verbose = True)
         else:
             try:
@@ -289,17 +320,11 @@ class TaskList(object):
         return task
 
     def edit_task(self, taskID, updated = None):
-        # steps:
-        # 0: select ID
-        # 1: description (or unchanged)
-        # 2: level (or unchanged)
-        # 3: due (or unchanged)
         if taskID >= self.count():
-            # raise ValueError("Task ID %d out of range(%d)" % (taskID, self.count()) )
             print "Task ID %d out of range(%d)" % (taskID, self.count())
             exit()
         t1 = self.getTask(taskID)
-        self.add_task(updated)
+        self.add_task(updated, t1)
         self.remove_task(t1)
 
     def remove_task(self, taskID):
