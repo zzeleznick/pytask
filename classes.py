@@ -61,11 +61,14 @@ class FormFiller(object):
         if checkHelp(raw):
             print self.runHelpFnc(idx)
         elif checkUndo(raw):
-            self.counter -= 1
+            self.counter = max(0, self.counter - 1)
             key = self.fields.keys()[self.counter]
             self.fields[key] = self.null
         elif not raw:
-            self.fields[key] = self.defaults[key][1]
+            cached = self.defaults[key][1]
+            if cached:
+                self.fields[key] = cached
+                self.counter += 1
         else:
             convert = self.defaults[key][0]
             try:
@@ -78,6 +81,7 @@ class FormFiller(object):
 
     def proccess(self):
         while self.incomplete():
+            # print 'Counter at', self.counter
             self.requestInput(self.counter)
             self.consumeInput()
         return self.fields.values()
@@ -373,6 +377,7 @@ def test3():
     for d,h,m in zip(range(5),range(5),range(5)):
         print d, Timestamp(None, d, h, m)
         print d, Timestamp(None, d, h, m).as24hour()
+
 def test4():
     form = FormFiller()
     print form
@@ -380,12 +385,23 @@ def test4():
     form.addRequiredField('poop')
     form.addRequiredField('scoop')
     print form
-    form.proccess()
+    vals = form.proccess()
     print form
+    print 'Values: %s' % vals
 
+def test5():
+    form = FormFiller()
+    fn = lambda x: lambda: 'Put %s up all in me!' % x
+    form.addRequiredField('desc', str, 'poop', '', fn('desc') )
+    form.addRequiredField('val', int, 3, '', fn('val') )
+    form.addRequiredField('date')
+    print form
+    vals = form.proccess()
+    print form
+    print 'Values: %s' % vals
 
 if __name__ == '__main__':
-    test4()
+    test5()
 '''
 class TaskList(object):
     """docstring for TaskList"""
