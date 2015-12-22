@@ -12,14 +12,19 @@ def test():
     t4 = Task(desc, 3)
     t5 = Task(desc, 2)
     # print 'TASK 1:', t1
+    print '----Constructing 3 tasks-----'
     lst = TaskList([t1, t2, t3])
     print '-----3 TASKS----\n', lst, '\n-----END 3 TASKS----'
+    print '----Adding 4th task-----'
     t4 += lst
     print '-----4 TASKS----\n', lst, '\n-----END 4 TASKS----'
+    print '----Removing 1st task-----'
     lst -= t1
     print '-----3 TASKS----\n', lst, '\n-----END 3 TASKS----'
+    print '----Removing id(2) task-----'
     lst.remove_task(2)
     print '-----2 TASKS----\n', lst, '\n-----END 2 TASKS----'
+    print '----Editing id(0) task-----'
     lst.edit_task(0)
     print '-----2 TASKS----\n', lst, '\n-----END 2 TASKS----'
     lst.add(t5)

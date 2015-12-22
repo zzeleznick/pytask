@@ -174,15 +174,25 @@ class Task(object):
             return out
 
         if date:
-            d = dt.strptime(date, "%a %b %d, %Y at %I:%M %p") # parse to dt instance
-            self.created = Timestamp(d) # create created
+            try:
+                d = dt.strptime(due, "%a %b %d, %Y at %I:%M %p") # parse to dt instance
+            except Exception, e:
+                print "Unrecognized Date format with value: '%s'." % date
+                self.created = Timestamp()
+            else:
+                self.created = Timestamp(d) # create created
         else:
             self.created = Timestamp()
 
         if due:
             if 'at' in due:
-                d = dt.strptime(due, "%a %b %d, %Y at %I:%M %p")
-                self.due =  Timestamp(d)
+                try:
+                    d = dt.strptime(due, "%a %b %d, %Y at %I:%M %p")
+                except Exception, e:
+                    print "Unrecognized Date format with value: '%s'." % due
+                    self.due = cp.deepcopy(self.created)
+                else:
+                    self.due =  Timestamp(d)
             else:
                 offsets = parse(due)
                 self.due = Timestamp(None, *offsets)
@@ -203,7 +213,7 @@ class TaskList(object):
         #super(TaskList, self).__init__()
         self.rep = ''
         self.labels = labels
-        self.tasks = {}
+        self.tasks = odict() # {}
         self.repgen = lambda: '\n'.join(['%s' % (self.tasks[t]) for i,t in enumerate(self.tasks)])
         self.set_tasks(tasks)
         self.add = self.__add__
@@ -319,7 +329,7 @@ class TaskList(object):
         return self
 
     def __add__(self, task):
-        self.tasks.update({self.count()+1: task})
+        self.tasks.update({task.hash(): task})
         print 'Succesfully added task\n%s\n' % (task)
         self.update_state()
 
