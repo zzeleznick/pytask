@@ -49,10 +49,10 @@ def test_Construction():
     print '----End Constructing 3 tasks-----'
     print '----Constructing 3-item TaskList-----'
     lst = TaskList([t1, t2, t3])
-    print 'Result\n', lst
+    print 'Result:\n', lst
     print '----End Constructing 3-item TaskList-----'
 
-def test_Add_Subtract():
+def test_Add_Subtract(verbose = True):
     print '----Constructing 3 tasks-----'
     desc = 'Test adding tasklist'
     t1 = Task(desc, 1)
@@ -63,17 +63,30 @@ def test_Add_Subtract():
     print '----End Constructing 3 tasks-----'
     print '----Constructing 0-item TaskList-----'
     lst = TaskList()
-    print 'Result\n', lst
+    assert str(lst) == '', 'Null TaskList not Null'
+    # print 'Result:\n', lst
     print '----End Constructing 0-item TaskList-----'
     print '----Adding 3 Tasks-----'
-    lst += t1
-    (lst.iadd(t2)).add(t3)
-    print 'Result\n', lst
+    if verbose:
+        lst.add_task(t1)
+        lst.add_task(t2)
+        lst.add_task(t3)
+    else:
+        lst += t1
+        (lst.iadd(t2)).add(t3)
+    expected = '\n'.join(['%s' % (t) for i,t in enumerate([t1,t2,t3])])
+    assert str(lst) == expected, "\nResult:\n %s \nExpected:\n %s" % (lst, expected)
+    # print 'Result\n', lst
     print '----End Adding 3 Tasks-----'
     print '----Removing 1st, 3rd Tasks-----'
-    lst - t3
-    lst.remove_task(0)
-    print 'Result\n', lst
+    if verbose:
+        lst.remove_task(t3)
+        lst.remove_task(0)
+    else:
+        (lst.isub(t3)).sub(0)
+    expected = '\n'.join(['%s' % (t) for i,t in enumerate([t2])])
+    assert str(lst) == expected, "\nResult:\n %s \nExpected:\n %s" % (lst, expected)
+    # print 'Result:\n', lst
     print '----End Removing 1st, 3rd Tasks-----'
 
 def test_Edit(user_input = False):
@@ -87,12 +100,12 @@ def test_Edit(user_input = False):
     print '----Adding 2 Tasks-----'
     lst = TaskList()
     (lst.iadd(t1)).add(t2)
-    print 'Result\n', lst
+    print 'Result:\n', lst
     print '----End Adding 2 Tasks-----'
     if user_input:
         print '----Editing id(0) task-----'
         lst.edit_task(0)
-        print 'Result\n', lst
+        print 'Result:\n', lst
         print '----End Editing id(0) task-----'
 
 def test_IO():
@@ -114,4 +127,5 @@ def test_IO():
     lst.zprint(arg = 'priority', rev=True)
 
 if __name__ == '__main__':
-    test_Add_Subtract()
+    v = True #False
+    test_Add_Subtract(v)

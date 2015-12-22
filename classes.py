@@ -222,7 +222,9 @@ class TaskList(object):
         self.set_tasks(tasks)
         self.add = self.__add__
         self.iadd = self.__iadd__
-        self.remove = self.__sub__
+        self.sub = self.__sub__
+        self.isub = self.__isub__
+        self.remove = self.__isub__
         # should contain the id numbers of all tasks with said label
         # tasks can share labels, not 1:1, but id's should be unique
         self.count = lambda: len(self.tasks)
@@ -270,21 +272,21 @@ class TaskList(object):
         out = Task(desc = text, plevel=value, date=created, due=due)
         return out
 
-    def add_task(self, text = '', val = 0, due = ''):
-        complete = truth(text) and truth(val) and truth(due)
-        if not complete:
+    def add_task(self, task = None):
+        if not task:
             helptext = '\n'.join(["Entering ADD Mode...", "Enter:", "\t'h' or 'help' for help",
             "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
             print helptext
-            t2 =  self.gen_task(text, val, due)
+            task =  self.gen_task(None, None, None)
+            self.add(task, verbose = True)
         else:
             try:
-                t2 = self.gen_task(text, val, due)
+                self.add(task, verbose = True)
             except Exception, e:
                 print e
-                t2 =  self.gen_task(None, None, None)
-        self + t2
-        return t2
+                task =  self.gen_task(None, None, None)
+                self.add(task, verbose = True)
+        return task
 
     def edit_task(self, taskID, desc = None, level = 0, due = None):
         # steps:
@@ -305,12 +307,13 @@ class TaskList(object):
             t2 =  self.gen_task(desc, level, due, oldTask = t1)
         else:
             t2 =  self.gen_task(desc, level, due, oldTask = t1)
-        self - t1
-        self + t2
-        print 'Succesfully updated task\nOLD: %s\nNEW: %s' % (t1, t2)
+
+        self.remove_task(t1)
+        self.add(t2, verbose = True)
+        # print 'Succesfully updated task\nOLD: %s\nNEW: %s' % (t1, t2)
 
     def remove_task(self, taskID):
-        self.__del__(taskID)
+        self.__del__(taskID, verbose = True)
 
     def getTask(self, ref):
         if type(ref) == Task:
@@ -333,19 +336,19 @@ class TaskList(object):
         self.__add__(task)
         return self
 
-    def __add__(self, task):
+    def __add__(self, task, verbose = False):
         self.tasks.update({task.hash(): task})
-        print 'Succesfully added task\n%s\n' % (task)
         self.update_state()
+        if verbose: print 'Succesfully added task\n%s\n' % (task)
 
     def __radd__(self, task):
         self.__add__(task)
 
-    def __del__(self, reference):
+    def __del__(self, reference, verbose = False):
         task = self.getTask(reference)
         self.tasks.pop(task.hash())
-        print 'Succesfully removed task\n%s\n' % (task)
         self.update_state()
+        if verbose: print 'Succesfully removed task\n%s\n' % (task)
 
     def __repr__(self):
         return '<TaskList %s>' % self.tasks
