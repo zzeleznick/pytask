@@ -89,7 +89,7 @@ def test_Add_Subtract(verbose = True):
     # print 'Result:\n', lst
     print '----End Removing 1st, 3rd Tasks-----'
 
-def test_Edit(user_input = False):
+def test_Edit(user_input = False, verbose = True):
     print '----Constructing 2 tasks-----'
     desc = 'Test edit_task'
     t1 = Task(desc, 1)
@@ -99,14 +99,23 @@ def test_Edit(user_input = False):
     print '----End Constructing 2 tasks-----'
     print '----Adding 2 Tasks-----'
     lst = TaskList()
-    (lst.iadd(t1)).add(t2)
+    if verbose:
+        lst.add_task(t1)
+        lst.add_task(t2)
+    else:
+        (lst.iadd(t1)).add(t2)
     print 'Result:\n', lst
     print '----End Adding 2 Tasks-----'
+    print '----Editing id(0) task-----'
     if user_input:
-        print '----Editing id(0) task-----'
         lst.edit_task(0)
         print 'Result:\n', lst
-        print '----End Editing id(0) task-----'
+    else:
+        t0 = Task('edited task', 5)
+        lst.edit_task(0, t0)
+        expected = '\n'.join(['%s' % (t) for i,t in enumerate([t2, t0])])
+        assert str(lst) == expected, "\nResult:\n %s \nExpected:\n %s" % (lst, expected)
+    print '----End Editing id(0) task-----'
 
 def test_IO():
     desc = 'Finish tasklist'
@@ -128,4 +137,5 @@ def test_IO():
 
 if __name__ == '__main__':
     v = True #False
-    test_Add_Subtract(v)
+    # test_Add_Subtract(v)
+    test_Edit(False, v)

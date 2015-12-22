@@ -288,7 +288,7 @@ class TaskList(object):
                 self.add(task, verbose = True)
         return task
 
-    def edit_task(self, taskID, desc = None, level = 0, due = None):
+    def edit_task(self, taskID, updated = None):
         # steps:
         # 0: select ID
         # 1: description (or unchanged)
@@ -298,19 +298,9 @@ class TaskList(object):
             # raise ValueError("Task ID %d out of range(%d)" % (taskID, self.count()) )
             print "Task ID %d out of range(%d)" % (taskID, self.count())
             exit()
-        complete = truth(desc) and truth(level) and truth(due)
         t1 = self.getTask(taskID)
-        if not complete:
-            helptext = '\n'.join(["Entering EDIT Mode...", "Enter:", "\t'h' or 'help' for help",
-            "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
-            print helptext
-            t2 =  self.gen_task(desc, level, due, oldTask = t1)
-        else:
-            t2 =  self.gen_task(desc, level, due, oldTask = t1)
-
+        self.add_task(updated)
         self.remove_task(t1)
-        self.add(t2, verbose = True)
-        # print 'Succesfully updated task\nOLD: %s\nNEW: %s' % (t1, t2)
 
     def remove_task(self, taskID):
         self.__del__(taskID, verbose = True)
