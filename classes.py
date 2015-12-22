@@ -29,7 +29,7 @@ class FormFiller(object):
 
     def checkForMissingValues(self):
         for key in self.fields:
-            if not self.fields[key]:
+            if self.fields[key] == self.null:
                 return True
         return False
 
@@ -150,7 +150,7 @@ class Timestamp(object):
 
 class Task(object):
     """docstring for Task"""
-    def __init__(self, desc, plevel = 0, date = None, due = None, colored = False, tags = []):
+    def __init__(self, desc, plevel = 0, date = None, due = None, colored = True, tags = []):
         #super(Task, self).__init__()
         self.description = desc
         self.priority = PriorityLevel(plevel, colored)
@@ -158,19 +158,15 @@ class Task(object):
         self.hash = lambda: self.__hash__()
         def parse(msg):
             # '1d0h30m' -> 1, 0, 30
+            # sp = re.compile(r'[ ]{2,}')
+            # msg = sp.sub('', msg.strip())
             nd = re.compile(r'\D')
-            lst  = nd.split(msg.strip())
-            d,h,m,idx = 0,0,0,0
+            lst  = nd.split(msg)
+            lst = [el for el in lst if el][:3]
+            d,h,m = 0,0,0
             out = [d,h,m]
-            possible = [el for idx, el in enumerate(lst) if el and idx < len(out)]
-            for el in possible:
-                try:
-                    val = int(el)
-                except Exception, e:
-                    pass
-                else:
-                    out[idx] = val
-                    idx += 1
+            for idx, el in enumerate(lst):
+                out[idx] = int(el)
             return out
 
         if date:
@@ -241,39 +237,16 @@ class TaskList(object):
                         "\tLevel: %s" % oldvalue, "\tDue: %s"  % olddue])
         print helptext
         null = ''
-        texthelp = "Write what you need to do!"
-        valuehelp = "Write how hard the task is on a scale of 1-5."
-        duehelp = "Write how many days-hours-mins it's due"
-        while not complete:
-            complete = truth(text) and truth(value) and truth(due)
-            if not text or not text.strip():
-                text = raw_input('Enter the new description:\n')
-                checkExit(text)
-                if text == null:
-                    text = oldtext
-                elif checkHelp(text):
-                    text = handleHelp(text, texthelp, null)
-                    continue
-            if not value:
-                value = raw_input('Enter the priority level:\n')
-                checkExit(value)
-                if checkHelp(value):
-                    value = handleHelp(value, valuehelp, null)
-                    continue
-                elif checkUndo(value):
-                    value, text = null, null
-                    continue
-                try: value = int(value)
-                except Exception, e: value = oldvalue
-            if not due:
-                due = raw_input("Enter in how many days-hours-mins it's due:\n")
-                checkExit(due)
-                if due == null:
-                    due = olddue
-                    continue
-                due = handleHelp(due, duehelp, null)
-                if checkUndo(due):
-                    due, value = null, null
+        texthelp = ["Enter the new description", "Just write what you need to do."]
+        valuehelp = ["Enter the priority level", "Write how hard the task is on a scale of 1-5."]
+        duehelp = ["Write in how many days, hours, mins it's due", ""]
+        form = FormFiller()
+        fn = lambda x: lambda: '%s' % x
+        form.addRequiredField('text', str, oldtext, texthelp[0], fn(texthelp[1]) )
+        form.addRequiredField('value', int, oldvalue, valuehelp[0], fn(valuehelp[1]) )
+        form.addRequiredField('due', str, olddue, duehelp[0], fn(duehelp[1]) )
+        vals = form.proccess()
+        text, value, due = vals
         out = Task(desc = text, plevel=value, date=created, due=due)
         return out
 
