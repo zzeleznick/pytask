@@ -33,6 +33,17 @@ class FormFiller(object):
                 return True
         return False
 
+    def setField(self, name, value, soft_exit = False):
+        convert = self.defaults[name][0]
+        try:
+            parsed = convert(value)
+        except Exception, e:
+            if soft_exit: print e
+            else: raise(e)
+        else:
+            self.fields[name] = parsed
+            self.counter += 1
+
     def addRequiredField(self, name, expected = str, default = '', helptext = '', helpfnc = lambda: ''):
         if not default:
             default = self.null
@@ -67,17 +78,9 @@ class FormFiller(object):
         elif not raw:
             cached = self.defaults[key][1]
             if cached:
-                self.fields[key] = cached
-                self.counter += 1
+                self.setField(key, cached, soft_exit = True)
         else:
-            convert = self.defaults[key][0]
-            try:
-                parsed = convert(raw)
-            except Exception, e:
-                print e
-            else:
-                self.fields[key] = parsed
-                self.counter += 1
+            self.setField(key, raw, soft_exit = True)
 
     def proccess(self):
         while self.incomplete():
@@ -93,6 +96,7 @@ class FormFiller(object):
         head = '--Begin Form--'
         end = '--End Form--'
         fields = ["'%s': %s" % (name, val) for name, val in self.fields.items()]
+        print self.defaults.values()
         defaults = ["%s, default: '%s'" % (exp, val) for exp, val in self.defaults.values()]
         pairs = zip(fields, defaults)
         lines = [', '.join(pair) for pair in pairs]
@@ -217,6 +221,7 @@ class TaskList(object):
         self.repgen = lambda: '\n'.join(['%s' % (self.tasks[t]) for i,t in enumerate(self.tasks)])
         self.set_tasks(tasks)
         self.add = self.__add__
+        self.iadd = self.__iadd__
         self.remove = self.__sub__
         # should contain the id numbers of all tasks with said label
         # tasks can share labels, not 1:1, but id's should be unique
@@ -347,42 +352,5 @@ class TaskList(object):
     def __str__(self):
         return '%s' % self.rep
 
-
-def test():
-    for i in range(7):
-        print i, 'colored:', PriorityLevel(i)
-        print i, 'base:', PriorityLevel(i, colored = False)
-
-def test2():
-    for i in range(7):
-        print i, 'repr:', repr(PriorityLevel(i))
-
-def test3():
-    for d,h,m in zip(range(5),range(5),range(5)):
-        print d, Timestamp(None, d, h, m)
-        print d, Timestamp(None, d, h, m).as24hour()
-
-def test4():
-    form = FormFiller()
-    print form
-    form.addRequiredField('derp')
-    form.addRequiredField('poop')
-    form.addRequiredField('scoop')
-    print form
-    # vals = form.proccess()
-    # print form
-    # print 'Values: %s' % vals
-
-def test5():
-    form = FormFiller()
-    fn = lambda x: lambda: 'Put %s up all in me!' % x
-    form.addRequiredField('desc', str, 'poop', '', fn('desc') )
-    form.addRequiredField('val', int, 3, '', fn('val') )
-    form.addRequiredField('date')
-    print form
-    # vals = form.proccess()
-    # print form
-    # print 'Values: %s' % vals
-
 if __name__ == '__main__':
-    test5()
+    pass

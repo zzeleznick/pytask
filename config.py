@@ -18,7 +18,11 @@ class DataStore(object):
         if vals and type(vals) == list and len(vals) >= 4:
             VALS = vals
         else:
-            os.chdir('/Users/zeleznick/tasker/')
+            favorite = '/Users/zeleznick/tasker/'
+            try:
+                os.chdir(favorite)
+            except Exception, e:
+                pass
             VALS = [ 'data/', 'CURRENT.csv',
                     'COMPLETED.csv', 'DELETED.csv']
         if not os.path.isdir(VALS[0]):
