@@ -2,6 +2,7 @@ import sys
 import time
 import copy as cp
 import re
+from collections import OrderedDict as odict
 
 from termcolor import colored # coloring yay
 from datetime import datetime as dt
@@ -14,6 +15,83 @@ names = ["Default", "Easy", "Medium", "Hard"]
 edges =  [0, 2, 3, 5]
 mycolor = lambda x: colors[sorted(edges + [x]).index(x)]
 myname = lambda x: names[sorted(edges + [x]).index(x)]
+
+class FormFiller(object):
+    """docstring for FormFiller"""
+    def __init__(self, null = ''):
+        self.null = null
+        self.incomplete = self.checkForMissingValues
+        self.counter = 0
+        self.fields = odict()
+        self.defaults = odict()
+        self.help = odict()
+        self.count = lambda: len(self.fields)
+
+    def checkForMissingValues(self):
+        for key in self.fields:
+            if not self.fields[key]:
+                return True
+        return False
+
+    def addRequiredField(self, name, expected = str, default = '', helptext = '', helpfnc = lambda: ''):
+        if not default:
+            default = self.null
+        if not helptext:
+            helptext = "Enter %s for '%s'." % (type(default), name)
+        self.fields[name] = self.null
+        self.defaults[name] = (expected, default)
+        self.help[name] = (helptext, helpfnc)
+
+    def runHelpFnc(self, idx):
+        key = self.fields.keys()[idx]
+        return self.help[key][1]()
+
+    def getPrompt(self, idx):
+        key = self.fields.keys()[idx]
+        return self.help[key][0]
+
+    def requestInput(self, idx):
+        print self.getPrompt(idx)
+
+    def consumeInput(self):
+        raw = raw_input()
+        idx = self.counter
+        key = self.fields.keys()[idx]
+        checkExit(raw)
+        if checkHelp(raw):
+            print self.runHelpFnc(idx)
+        elif checkUndo(raw):
+            self.counter -= 1
+            key = self.fields.keys()[self.counter]
+            self.fields[key] = self.null
+        elif not raw:
+            self.fields[key] = self.defaults[key][1]
+        else:
+            convert = self.defaults[key][0]
+            try:
+                parsed = convert(raw)
+            except Exception, e:
+                print e
+            else:
+                self.fields[key] = parsed
+                self.counter += 1
+
+    def proccess(self):
+        while self.incomplete():
+            self.requestInput(self.counter)
+            self.consumeInput()
+        return self.fields.values()
+
+    def __repr__(self):
+        return '<Form with fields %s>' % self.fields.keys()
+    def __str__(self):
+        head = '--Begin Form--'
+        end = '--End Form--'
+        fields = ["'%s': %s" % (name, val) for name, val in self.fields.items()]
+        defaults = ["%s, default: '%s'" % (exp, val) for exp, val in self.defaults.values()]
+        pairs = zip(fields, defaults)
+        lines = [', '.join(pair) for pair in pairs]
+        return '\n'.join([head, '\n'.join(lines), end])
 
 class PriorityLevel(object):
     """docstring for PriorityLevel"""
@@ -295,9 +373,19 @@ def test3():
     for d,h,m in zip(range(5),range(5),range(5)):
         print d, Timestamp(None, d, h, m)
         print d, Timestamp(None, d, h, m).as24hour()
+def test4():
+    form = FormFiller()
+    print form
+    form.addRequiredField('derp')
+    form.addRequiredField('poop')
+    form.addRequiredField('scoop')
+    print form
+    form.proccess()
+    print form
+
 
 if __name__ == '__main__':
-    test3()
+    test4()
 '''
 class TaskList(object):
     """docstring for TaskList"""
