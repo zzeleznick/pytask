@@ -20,17 +20,18 @@
         {% if TL %}
           {% for k in TL.tasks %}
           <div class="task-container">
-           <ul class="tasks">
-           <li class="priority" contenteditable="false">
-              <text contenteditable="true"> {{TL.tasks[k].priority.value}} </text>
-            </li>
-           <li class="desc" contenteditable="false">
-           <text contenteditable="true"> {{TL.tasks[k].description}} </text>
-           </li>
-           <li class="due"  contenteditable="false">
-            <text contenteditable="true"> {{TL.tasks[k].due.rep}}  </text>
-           </li>
-           </ul>
+            <ul class="tasks">
+             <li class="priority" contenteditable="false">
+                <text contenteditable="true"> {{TL.tasks[k].priority.value}} </text>
+              </li>
+             <li class="desc" contenteditable="false">
+             <text contenteditable="true"> {{TL.tasks[k].description}} </text>
+             </li>
+             <li class="due"  contenteditable="false">
+              <text contenteditable="true"> {{TL.tasks[k].due.rep}}  </text>
+             </li>
+             <button onclick="activate()">Click Me</button>
+             </ul>
           </div>
           {%  endfor %}
        {%  endif %}

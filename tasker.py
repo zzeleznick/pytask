@@ -86,6 +86,7 @@ def get(colored = True):
     tasks = []
     for line in tasksRaw:
         ts, desc, val, dead = line
+        # print line
         tasks += [Task(desc, plevel = val, date = ts, due = dead, colored = colored)]
     lst = TaskList(tasks)
     return lst
@@ -127,50 +128,49 @@ def add():
     ds = build()
     ds.writeTasks(lst)
 
+def getTaskID(action, tasklist):
+    ''' returns the index of the task via User Input'''
+    action = (str(action)).strip()
+    info = "About to enter %s Mode...\nEnter:\n" % (action.upper())
+    helpkeys = "\t'h' or 'help' for help"
+    undokeys = "\t'u' or undo' to reset."
+    esckeys = "\t'q' or quit' to exit"
+    helptext = '\n'.join([info, helpkeys, undokeys, esckeys])
+    print helptext
+    null = ''
+    idx = null
+    idxh1 = 'Select the (id) of the task that you want to %s' % action
+    idxh2 = '\n'.join(['%s (%d)' % (tasklist.tasks[t], i) for i,t in enumerate(tasklist.tasks)])
+    idxhelp = '\n'.join(["All tasks:", idxh1, idxh2])
+    while idx == null:
+        idx = raw_input('Which task would you like to %s \n' % action)
+        checkExit(idx)
+        idx = handleHelp(idx, idxhelp, null)
+        idx = handleUndo(idx, idx, null)
+        if idx:
+            try: idx = int(idx)
+            except Exception, e: idx = null
+    return idx
+
 def edit():
     '''
     Edits a task
     >>> tasker.py edit
     '''
     lst = get()
-    idx = ''
-    helptext = '\n'.join(["About to enter EDIT Mode...", "Enter:", "\t'h' or 'help' for help",
-            "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
-    print helptext
-    while idx == '':
-        idx = raw_input('Which task would you like to edit:\n')
-        if checkHelp(idx):
-            print 'Select the (id) of the task that you want to edit'
-            idx = ''
-            out = '\n'.join(['%s (%d)' % (lst.tasks[t], i) for i,t in enumerate(lst.tasks)])
-            print 'All tasks:\n', out
-        elif checkExit(idx):
-            exit()
-        elif checkUndo(idx):
-            idx = ''
-        if idx:
-            try: idx = int(idx)
-            except Exception, e: idx = ''
+    idx = getTaskID('edit', lst)
     lst.edit_task(idx)
     drop()
+    # print lst
     write(lst)
 
 def remove():
+    '''
+    Removes a task
+    >>> tasker.py remove
+    '''
     lst = get()
-    idx = raw_input('Which task would you like to delete:\n')
-    if idx:
-        try: idx = int(idx)
-        except Exception, e: idx = ''
-    while idx == '':
-        out = '\n'.join(['%s (%d)' % (lst.tasks[t], i) for i,t in enumerate(lst.tasks)])
-        print 'All tasks:\n', out
-        idx = raw_input('Which task would you like to delete:\n')
-        cmd = idx.strip().upper()
-        if cmd == 'X' or cmd == 'Q' or 'QUIT' in cmd:
-            exit()
-        if idx:
-            try: idx = int(idx)
-            except Exception, e: idx = ''
+    idx = getTaskID('delete', lst)
     lst.remove_task(idx)
     drop()
     write(lst)

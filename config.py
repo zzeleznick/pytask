@@ -49,8 +49,8 @@ class DataStore(object):
                                     quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for idx, key in enumerate(taskList.tasks):
                 t1 = taskList.tasks[key]
-                desc, level, due, created = [t1.description, t1.priority.value, t1.due.hrep, t1.timestamp.hrep]
-                zwriter.writerow([created] + [desc] + [level] + [due])
+                desc, value, due, created = [t1.description, t1.priority.value, t1.due.hrep, t1.created.hrep]
+                zwriter.writerow([created] + [desc] + [value] + [due])
 
     def writeTask(self, desc, plevel, created, due):
         fname = self.DATA_FOLDER + self.CURRENT_TASKS
