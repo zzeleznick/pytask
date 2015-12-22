@@ -88,6 +88,7 @@ class FormFiller(object):
 
     def __repr__(self):
         return '<Form with fields %s>' % self.fields.keys()
+
     def __str__(self):
         head = '--Begin Form--'
         end = '--End Form--'
@@ -96,6 +97,7 @@ class FormFiller(object):
         pairs = zip(fields, defaults)
         lines = [', '.join(pair) for pair in pairs]
         return '\n'.join([head, '\n'.join(lines), end])
+
 
 class PriorityLevel(object):
     """docstring for PriorityLevel"""
@@ -120,8 +122,10 @@ class PriorityLevel(object):
         self.name = myname(self.value)  # name of label
         self.rep = '%s %d' % (self.name, self.value)
         self.hrep = '*' * (self.value) + ' ' * (high - self.value)
+
     def __repr__(self):
         return '<%s Label>' % self.rep
+
     def __str__(self):
         if self.colored:
             return colored(self.hrep, self.color)
@@ -186,6 +190,7 @@ class Task(object):
             self.due = cp.deepcopy(self.created)
 
         self.rep = '%s  %s  Due: %s' % (self.priority, self.description, self.due.hrep)
+
     def __repr__(self):
         return '<Task: %s>' % self.rep
     def __str__(self):
@@ -277,19 +282,14 @@ class TaskList(object):
             print "Task ID %d out of range(%d)" % (taskID, self.count())
             exit()
         complete = truth(desc) and truth(level) and truth(due)
-        h = self.tasks.keys()[taskID]
-        t1 = self.tasks[h]
+        t1 = self.getTask(taskID)
         if not complete:
             helptext = '\n'.join(["Entering EDIT Mode...", "Enter:", "\t'h' or 'help' for help",
             "\t'q' or quit' to exit", "\t'u' or undo' to reset."])
             print helptext
             t2 =  self.gen_task(desc, level, due, oldTask = t1)
         else:
-            try:
-                t2 =  self.gen_task(desc, level, due, oldTask = t1)
-            except Exception, e:
-                print e
-                t2 =  self.gen_task(None, None, None, oldTask = t1)
+            t2 =  self.gen_task(desc, level, due, oldTask = t1)
         self - t1
         self + t2
         print 'Succesfully updated task\nOLD: %s\nNEW: %s' % (t1, t2)
@@ -308,30 +308,30 @@ class TaskList(object):
         raise(KeyError('Task cannot be found with key: %s' % ref))
 
     def __sub__(self, task):
-        try:
-            self.tasks.pop(task.hash())
-        except ValueError, e:
-            print 'Task: %s cannot be found' % task
-        else:
-            print 'Succesfully removed task\n%s\n' % (task)
-            self.update_state()
+        self.__del__(task)
+
     def __isub__(self, task):
         self.__sub__(task)
         return self
+
+    def __iadd__(self, task):
+        self.__add__(task)
+        return self
+
     def __add__(self, task):
         self.tasks.update({self.count()+1: task})
         print 'Succesfully added task\n%s\n' % (task)
         self.update_state()
+
     def __radd__(self, task):
         self.__add__(task)
-    def __iadd__(self, task):
-        self.__add__(task)
-        return self
+
     def __del__(self, reference):
         task = self.getTask(reference)
         self.tasks.pop(task.hash())
         print 'Succesfully removed task\n%s\n' % (task)
         self.update_state()
+
     def __repr__(self):
         return '<TaskList %s>' % self.tasks
     def __str__(self):
@@ -342,6 +342,7 @@ def test():
     for i in range(7):
         print i, 'colored:', PriorityLevel(i)
         print i, 'base:', PriorityLevel(i, colored = False)
+
 def test2():
     for i in range(7):
         print i, 'repr:', repr(PriorityLevel(i))
@@ -375,13 +376,3 @@ def test5():
 
 if __name__ == '__main__':
     test5()
-'''
-class TaskList(object):
-    """docstring for TaskList"""
-    __tasks = {} # shared class variable
-    __labels = []
-
-    @staticmethod
-    def countTasks():
-        return len(TaskList.__tasks)
-'''
