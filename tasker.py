@@ -86,7 +86,6 @@ def get(colored = True):
     tasks = []
     for line in tasksRaw:
         ts, desc, val, dead = line
-        # print line
         tasks += [Task(desc, plevel = val, date = ts, due = dead, colored = colored)]
     lst = TaskList(tasks)
     return lst
