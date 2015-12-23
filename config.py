@@ -95,7 +95,7 @@ class Schema(object):
         try:
             parsed = convert(value)
         except Exception, e:
-            if raiseError:
+            if returnError:
                 return e
             else:
                 return False
@@ -104,24 +104,18 @@ class Schema(object):
 
     def fill_field(self, name, value = None, throwError = False):
         """At this point, all default values are of correct type"""
-        if not value:
-            # allow population from default
-            converted = self.defaults[name]
-        else:
-            if self.is_valid(name, value):
-                convert = self.expected[name]
-                converted = convert(value)
-            elif not self.is_valid(name, value) and throwError:
-                raise(self.is_valid(name, value, returnError = True))
 
-        if not converted:
-            self.values[name] = self.null
-            if throwError:
-                # returned null value in bad context
-                msg = "Converted value '%s' is null" % converted
-                raise(TypeError(msg))
-        else:
+        if self.is_valid(name, value):
+            convert = self.expected[name]
+            converted = convert(value)
             self.values[name] = converted
+        elif throwError:
+             raise(self.is_valid(name, value, returnError = True))
+        else:
+            if value:  # wasn't valid, but inputted
+                self.values[name] = self.null
+            else:
+                self.values[name] = self.defaults[name]
 
     def __repr__(self):
         head = '|--=s %s s=--|' % self.name
@@ -190,18 +184,23 @@ class Form(Schema):
         if cmd.is_exit():
             print 'Exit triggered'; exit()
         elif cmd.is_help():
-            print self.run_help()
+            print self.help(name)
         elif cmd.is_undo():
             self.counter = max(0, self.counter - 1)
             name = self.values.keys()[self.counter]
             self.values[name] = self.null
         else:
             self.fill_field(name, raw)
+            out = self.values[name]
+            if out:
+                print "Adding %s to field '%s'." % (out, name)
+                self.counter += 1
 
     def proccess(self):
         while self.incomplete():
             # print 'Counter at', self.counter
-            self.requestInput(self.counter)
+            name = self.values.keys()[self.counter]
+            print self.prompt(name)
             self.consumeInput()
         return self.values.values()
 
@@ -312,6 +311,15 @@ def test_FormH():
     print 'Prompts:'
     form.all_prompts()
 
+def test_FormI():
+    fields = ['desc', 'value', 'date']
+    expected = [str, int, str]
+    defaults = ['x', 1, 'y']
+    form = Form(fields, expected, defaults)
+    vals = form.proccess()
+    print vals
+
 if __name__ == '__main__':
-    test_Schema()
+    # test_Schema()
     test_FormH()
+    test_FormI()
