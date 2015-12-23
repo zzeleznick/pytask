@@ -8,6 +8,7 @@ from termcolor import colored # coloring yay
 from datetime import datetime as dt
 # internals
 from utils import *
+from config import Form
 
 EPOCH = dt.fromtimestamp(0)
 colors = ["blue", "green", "yellow", "red"]
@@ -281,7 +282,7 @@ class TaskList(object):
              with fields: (description, value, due)
         """
         if type(oldTask) != Task:
-            oldtext, oldvalue, olddue, created = [''] * 4
+            oldtext, oldvalue, olddue, created = '', 1, '', ''
         else:
             t1 = oldTask
             oldtext, oldvalue, olddue, created = [t1.description, t1.priority.value, t1.due.hrep, t1.created.hrep]
@@ -289,6 +290,12 @@ class TaskList(object):
         helptext = '\n'.join(["Using", "\tDescription: %s" % oldtext,
                         "\tLevel: %s" % oldvalue, "\tDue: %s"  % olddue])
         print helptext
+        fields =   ['desc', 'value', 'date']
+        expected = [str, int, str]
+        defaults = [oldtext, oldvalue, olddue]
+        form = Form(fields, expected, defaults)
+        vals = form.proccess()
+        """
         null = ''
         texthelp = ["Enter the new description", "Just write what you need to do."]
         valuehelp = ["Enter the priority level", "Write how hard the task is on a scale of 1-5."]
@@ -299,6 +306,7 @@ class TaskList(object):
         form.addRequiredField('value', int, oldvalue, valuehelp[0], fn(valuehelp[1]) )
         form.addRequiredField('due', str, olddue, duehelp[0], fn(duehelp[1]) )
         vals = form.proccess()
+        """
         text, value, due = vals
         out = Task(desc = text, value=value, date=created, due=due)
         return out

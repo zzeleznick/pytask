@@ -104,7 +104,6 @@ class Schema(object):
 
     def fill_field(self, name, value = None, throwError = False):
         """At this point, all default values are of correct type"""
-
         if self.is_valid(name, value):
             convert = self.expected[name]
             converted = convert(value)
@@ -204,19 +203,17 @@ class Form(Schema):
             self.consumeInput()
         return self.values.values()
 
-class Task(Schema):
+class TaskGeneric(Schema):
     """docstring for Task"""
     def __init__(self, arg):
         super(Task, self).__init__()
         self.arg = arg
 
-class TaskDefault(Task):
+class TaskDefault(TaskGeneric):
     """docstring for TaskDefault"""
     def __init__(self, arg):
         super(TaskDefault, self).__init__()
         self.arg = arg
-
-
 
 
 class DataStore(object):
@@ -316,10 +313,11 @@ def test_FormI():
     expected = [str, int, str]
     defaults = ['x', 1, 'y']
     form = Form(fields, expected, defaults)
+    print form
     vals = form.proccess()
     print vals
 
 if __name__ == '__main__':
     # test_Schema()
-    test_FormH()
+    # test_FormH()
     test_FormI()
