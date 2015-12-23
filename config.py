@@ -56,12 +56,12 @@ class DataStore(object):
                 desc, value, due, created = [t1.description, t1.priority.value, t1.due.hrep, t1.created.hrep]
                 zwriter.writerow([created] + [desc] + [value] + [due])
 
-    def writeTask(self, desc, plevel, created, due):
+    def writeTask(self, desc, value, created, due):
         fname = self.DATA_FOLDER + self.CURRENT_TASKS
         with open(fname, 'a') as csvfile:
             zwriter = csv.writer(csvfile, delimiter='@',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            zwriter.writerow([created] + [desc] + [plevel] + [due])
+            zwriter.writerow([created] + [desc] + [value] + [due])
     def __repr__(self):
         return '<DS %s | %s>' % (self.DATA_FOLDER, self.CURRENT_TASKS)
     def __str__(self):
@@ -70,3 +70,6 @@ class DataStore(object):
 def buildConfig(zvals = []):
     ds = DataStore(zvals)
     return ds
+
+if __name__ == '__main__':
+    pass
