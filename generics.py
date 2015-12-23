@@ -22,7 +22,7 @@ class Schema(object):
     def __init__(self, fields, expected_types, defaults = []):
         self.null = ''
         self.name = 'Schema'
-
+        self.hash = lambda: self.__hash__()
         self.fields = fields
         self.expected = odict([(name,t)  for name, t in zip(fields, expected_types)])
         self.check_expected()
@@ -198,15 +198,20 @@ a way to add, remove, and sort
 - handle tasklist methods
 - provide generics
 """
+"""
+# http://eli.thegreenplace.net/2011/08/14/python-metaclasses-by-example
+MyObject = type('MyObject', (object,), {})
+obj = MyObject()
+for attr in defaultTaskNameSpace:
+    obj.__dict__[attr] = 0
+"""
 
 class TaskGeneric(Schema):
     """docstring for Task"""
-    def __init__(self, arg):
-        super(Task, self).__init__()
-        self.arg = arg
-
-class TaskDefault(TaskGeneric):
-    """docstring for TaskDefault"""
-    def __init__(self, arg):
-        super(TaskDefault, self).__init__()
-        self.arg = arg
+    def __init__(self, fields, expected_types, defaults = []):
+        super(TaskGeneric, self).__init__(fields, expected_types, defaults)
+        self.rep = ' '.join(['%s' % self.values[k] for k in self.values])
+    def __repr__(self):
+        return '<Task: %s>' % self.rep
+    def __str__(self):
+        return self.rep

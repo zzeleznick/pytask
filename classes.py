@@ -6,6 +6,7 @@ from collections import OrderedDict as odict
 
 from termcolor import colored # coloring yay
 from datetime import datetime as dt
+
 # internals
 from utils import *
 from generics import *
@@ -78,9 +79,6 @@ class Task(object):
         self.color = self.priority.color
         self.hash = lambda: self.__hash__()
         def parse(msg):
-            # '1d0h30m' -> 1, 0, 30
-            # sp = re.compile(r'[ ]{2,}')
-            # msg = sp.sub('', msg.strip())
             nd = re.compile(r'\D')
             lst  = nd.split(msg)
             lst = [el for el in lst if el][:3]
@@ -169,31 +167,25 @@ class TaskList(object):
              with fields: (description, value, due)
         """
         if type(oldTask) != Task:
-            oldtext, oldvalue, olddue, created = '', 1, '', ''
+            oldtext, oldvalue, olddue, created = ['', 1, '', '']
         else:
             t1 = oldTask
-            oldtext, oldvalue, olddue, created = [t1.description, t1.priority.value, t1.due.hrep, t1.created.hrep]
-        complete = truth(text) and truth(value) and truth(due)
+            oldtext, oldvalue = [t1.description, t1.priority.value]
+            olddue, created = [t1.due.hrep, t1.created.hrep]
+
         helptext = '\n'.join(["Using", "\tDescription: %s" % oldtext,
                         "\tLevel: %s" % oldvalue, "\tDue: %s"  % olddue])
         print helptext
+
         fields =   ['desc', 'value', 'date']
         expected = [str, int, str]
         defaults = [oldtext, oldvalue, olddue]
-        form = Form(fields, expected, defaults)
+        prompts =  [(0, "Enter the new description"),
+                    (1, "Enter the priority level",),
+                    (2, "Write in how many days, hours, mins it's due")]
+        promptFncs = [ (lambda x: lambda: x)(m) for i, m in prompts]
+        form = Form(fields, expected, defaults, promptFncs)
         vals = form.proccess()
-        """
-        null = ''
-        texthelp = ["Enter the new description", "Just write what you need to do."]
-        valuehelp = ["Enter the priority level", "Write how hard the task is on a scale of 1-5."]
-        duehelp = ["Write in how many days, hours, mins it's due", ""]
-        form = FormFiller()
-        fn = lambda x: lambda: '%s' % x
-        form.addRequiredField('text', str, oldtext, texthelp[0], fn(texthelp[1]) )
-        form.addRequiredField('value', int, oldvalue, valuehelp[0], fn(valuehelp[1]) )
-        form.addRequiredField('due', str, olddue, duehelp[0], fn(duehelp[1]) )
-        vals = form.proccess()
-        """
         text, value, due = vals
         out = Task(desc = text, value=value, date=created, due=due)
         return out

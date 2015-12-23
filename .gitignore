@@ -2,3 +2,4 @@ data/
 derp/
 *.pyc
 .env/
+oldClasses.py

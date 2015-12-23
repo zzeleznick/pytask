@@ -33,7 +33,6 @@ def test_Schema():
     schema.populate_all()
     print schema
 
-
 def test_FormH():
     fields = ['desc', 'value', 'date']
     expected = [str, int, str]
