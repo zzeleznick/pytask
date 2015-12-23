@@ -1,3 +1,10 @@
-# Here lies the TODO app TASKER!
+Tasker (Todo-App)
+==============
 
-## [Travis Testing Url](https://travis-ci.org/zzeleznick/pytask "Build Status")  [![Build Status](https://api.travis-ci.org/zzeleznick/pytask.svg)](https://travis-ci.org/zzeleznick/pytask)
+This repository is the home of Tasker.
+
+Visit the docs [here](http://zzeleznick.github.io/pytask/build/html/index.html "Docs")
+
+Current Status
+==============
+[![Build Status](https://api.travis-ci.org/zzeleznick/pytask.svg)](https://travis-ci.org/zzeleznick/pytask)
