@@ -23,28 +23,30 @@ def test_Timestamp():
         print d, Timestamp(None, d, h, m)
         print d, Timestamp(None, d, h, m).as24hour()
 
-def test_Form(basic = False, user_input = False):
-    form = FormFiller()
-    fn = lambda x: lambda: 'Put %s up all in me!' % x
-    var1, var2, var3 = ["name", "value", "date"]
-    form.addRequiredField(var1, str, 'poop', '', fn(var1) )
-    form.addRequiredField(var2, int, 3, '', fn(var2) )
-    form.addRequiredField(var3)
+
+def test_Schema():
+    fields = ['desc', 'value', 'date']
+    expected = [str, int, str]
+    defaults = ['x', 1, 'y']
+    schema = Schema(fields, expected, defaults)
+    print schema
+    schema.populate_all()
+    print schema
+
+
+def test_FormH():
+    fields = ['desc', 'value', 'date']
+    expected = [str, int, str]
+    defaults = ['x', 1, 'y']
+    # helpFn = lambda x: lambda: '<insert> value into %s' % x
+    # helpers = [helpFn(el) for el in fields]
+    helpers = []
+    form = Form(fields, expected, defaults, helpers)
     print form
-    if user_input:
-        vals = form.proccess()
-    else:
-        form.setField(var1, 'Zach')
-        form.setField(var3, Timestamp())
-        if not basic:
-            try:
-                form.setField(var2, 'Bad input')
-            except Exception, e:
-                print(e)
-                form.setField(var2, 2)
-        vals = form.fields.values()
-    print form
-    print 'Values: %s' % vals
+    print 'Help:'
+    form.all_help()
+    print 'Prompts:'
+    form.all_prompts()
 
 def test_Construction():
     with maketest('Make 3 Tasks'):
