@@ -2,6 +2,7 @@ import re
 from itertools import chain
 from collections import OrderedDict
 
+from generics import Form
 
 class MyObject(object):
     """docstring for Myobject"""
@@ -32,7 +33,8 @@ class odict(OrderedDict):
         indents = '\n' + ':' * (self.depth + 2)
         return '%s%s(%s)' % (indents, self.name, items)
 
-FILE = 'test.zml'
+FOLDER = 'tests/'
+FILE = '1.zml'
 
 # |---== REGEX EXPRESSIONS ==---|
 nalpha = re.compile(r'[^a-zA-Z]')  # check for actual text
@@ -151,10 +153,13 @@ def parseZML(filename):
     print props
     return props
 
-def test():
+def get_test_lines():
     lines = ['::Fields::', ':::name::\n\t::junk:::\n\n', ':::value::', ':::lst::',
     '::Types::', ':::str::', ':::int::', ':::list::',
     '::Values::', ':::Zach::', ':::2::', ':::s@$$20hit::-wewqdd:' ]
+    return lines
+
+def refine_props(lines):
     props = get_properties(lines)
     print props, '\n'
     lst = []
@@ -166,18 +171,52 @@ def test():
             sublist += [key]
         print sublist, '\n'
         lst += [sublist]
-    fields, exp, vals = lst
     print lst
+    return lst
+
+def build_Generic(FEVlst):
+    '''
+    Takes a list of lists (fields, expected_types, values)
+    '''
+    fields, exp, vals = FEVlst
     assert len(fields) == len(exp) and len(exp) == len(vals)
     namespace = zip(fields, vals, exp)
     out = MyObject()
     for f,v,e in namespace:
         tp = eval(e)
         out.set_prop(f,v,tp)
-
     print out
+    return out
 
+def build_Form(FEVlst):
+    '''
+    Takes a list of lists (fields, expected_types, values)
+    '''
+    fields, exp, vals = FEVlst
+    assert len(fields) == len(exp) and len(exp) == len(vals)
+    expected = [eval(ex) for ex in exp]
+    helpers = []
+    form = Form(fields, expected, vals, helpers)
+    print form
+    return form
+
+def test():
+    lines = get_test_lines()
+    lst = refine_props(lines)
+    build_Generic(lst)
+    form = build_Form(lst)
+    vals = form.proccess()
+    print vals
+
+def test2():
+    fields = ['name', 'value', 'lst']
+    expected = [str, int, list]
+    defaults = ['', 1, '']
+    helpers = []
+    form = Form(fields, expected, defaults, helpers)
+    print form
 
 if __name__ == '__main__':
-    # parseZML(FILE)
+    # parseZML(FOLDER+FILE)
     test()
+    # test2()

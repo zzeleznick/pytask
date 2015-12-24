@@ -33,6 +33,9 @@ class PriorityLevel(object):
             if type(val) != int: # if val is passed in as a string
                 try: val = int(val) # attempt conversion
                 except Exception, e: val = low # 0 if failed
+            if val > high:
+                print '''Cannot set value to %d with a max of %d.
+                Truncating to %d'''  % (val, high, high)
             val = min(max(val, low), high)
             return val % (high+1)
         self.value = setValue(val) # 1-5 for valid
@@ -73,7 +76,8 @@ class Timestamp(object):
 class Task(object):
     """docstring for Task"""
     def __init__(self, desc, value = 0, date = None, due = None, colored = True, tags = []):
-        self.description = desc
+        specials = re.compile(r'[@]')
+        self.description = specials.sub('', desc)
         self.priority = PriorityLevel(value, colored)
         self.value = self.priority.value
         self.color = self.priority.color

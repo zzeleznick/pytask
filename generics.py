@@ -1,11 +1,6 @@
 from collections import OrderedDict as odict
 
-iterReq = lambda d, x: "Arg '%s' of %s must be iterable." % (d, type(x))
-sameLengthReq = lambda x, y: 'Fields (%d) and Types (%d) must have same length.' % (len(x), len(y))
-CMD = lambda x: x.strip().upper()
-checkHelp = lambda x: 1 if (CMD(x) == 'H' or CMD(x) == 'HELP') else 0
-checkExit = lambda x: 1 if (CMD(x) == 'X' or CMD(x) == 'Q' or CMD(x) == 'QUIT') else 0
-checkUndo =  lambda x: 1 if (CMD(x) == 'B' or CMD(x) == 'U' or CMD(x) == 'UNDO') else 0
+from utils import *
 
 class Command(object):
     def __init__(self, text):
@@ -81,28 +76,32 @@ class Schema(object):
             if returnError:
                 return e
             else:
+                print e
                 return False
         else:
             return True
 
     def fill_field(self, name, value = None, throwError = False):
         """At this point, all default values are of correct type"""
-        if self.is_valid(name, value):
+        # print "User inputted '%s'" % value
+        if value and self.is_valid(name, value):
             convert = self.expected[name]
             converted = convert(value)
-            self.values[name] = converted
         elif throwError:
              raise(self.is_valid(name, value, returnError = True))
         else:
             if value:  # wasn't valid, but inputted
-                self.values[name] = self.null
+                converted = self.null
             else:
-                self.values[name] = self.defaults[name]
+                print ">>> Invalid Input.\n>>> Using default value '%s'.\n>>> Press 'u' to undo." % self.defaults[name]
+                converted = self.defaults[name]
+        if converted:
+            self.values[name] = converted
 
     def __repr__(self):
         head = '|--=s %s s=--|' % self.name
         end =  '|--=e %s e=--|' % self.name
-        fields = ["'%s': %s" % (k, self.values[k]) for k in self.values]
+        fields = ["'%s': {%s} [%s]" % (k, self.values[k], self.defaults[k]) for k in self.fields]
         expected = ["%s" % (self.expected[k]) for k in self.expected]
         pairs = zip(fields, expected)
         lines = [', '.join(pair) for pair in pairs]
@@ -116,8 +115,8 @@ class Form(Schema):
                  promptFncs = [], helpFncs = []):
         super(Form, self).__init__(fields, expected_types, defaults)
         self.name = 'Form'
-        self._prompt = lambda x,y: lambda: "Enter a %s into field '%s'" % (x,y)
-        self._help = lambda x,y: lambda: '<insert> value into %s' % (y)
+        self._prompt = lambda x,y: lambda: "> Enter a %s into field '%s'." % (x,y)
+        self._help = lambda x,y: lambda: "\n>> You need to fill in the field '%s' before we move on." % (y)
         self.prompts = self.buildHelpMessages(promptFncs, fallback = self._prompt )
         self.helpers = self.buildHelpMessages(helpFncs, fallback = self._help )
         self.incomplete = self.checkForMissingValues
@@ -175,7 +174,7 @@ class Form(Schema):
             self.fill_field(name, raw)
             out = self.values[name]
             if out:
-                print "Adding %s to field '%s'." % (out, name)
+                # print "Adding %s to field '%s'." % (out, name)
                 self.counter += 1
 
     def proccess(self):

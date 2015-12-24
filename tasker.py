@@ -9,6 +9,8 @@ from termcolor import colored # coloring yay
 # internals
 from classes import *
 from utils import *
+from config import buildConfig
+
 '''
 Program for running todo app
 '''
@@ -64,8 +66,15 @@ def parse_cmd_options():
     elif flags == 'COUNT' or flags == 'DROP':
         proceed = raw_input("Warning. About to delete all tasks. Enter 'y' to continue\n")
         if proceed.strip().upper() == 'Y':
-            print 'Deleting %d tasks ' % count()
-            drop()
+            try:
+                found_count = count()
+            except Exception, e:
+                print(e)
+                proceed = raw_input("Continue? Enter 'y' to proceed.\n")
+                if proceed.strip().upper() == 'Y': drop()
+            else:
+                print 'Deleting %d tasks ' % found_count
+                drop()
     elif flags == 'H' or 'HELP' in flags:
         parser.print_help()
     elif not flags:
@@ -76,6 +85,14 @@ def parse_cmd_options():
 
     # Handling Options #
     VERBOSE = args.verbose
+
+def build(zvals = []):
+    '''
+    The locations of the various data files
+    Folder location, and filenames if customized
+    default = [ 'data/', 'CURRENT.csv', 'COMPLETED.csv', 'DELETED.csv']
+    '''
+    return buildConfig(zvals)
 
 def get(colored = True):
     '''
@@ -143,9 +160,11 @@ def getTaskID(action, tasklist):
     idxhelp = '\n'.join(["All tasks:", idxh1, idxh2])
     while idx == null:
         idx = raw_input('Which task would you like to %s \n' % action)
-        unsafeExit(idx)
+        if checkExit(idx):
+            exit()
         idx = handleHelp(idx, idxhelp, null)
-        idx = handleUndo(idx, idx, null)
+        if checkUndo(idx):
+            idx = null
         if idx:
             try: idx = int(idx)
             except Exception, e: idx = null
