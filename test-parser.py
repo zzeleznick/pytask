@@ -3,19 +3,21 @@ from itertools import chain
 from collections import OrderedDict
 
 
-stripper = lambda x,y: (x,y) if y else x
+# stripper = lambda x,y: (x,y) if y else x
+stripper = lambda x,y: y if y else x
 
 class odict(OrderedDict):
     """docstring for odict"""
-    def __init__(self, name):
+    def __init__(self, name, depth = 0):
         super(odict, self).__init__()
         self.name = name
+        self.depth = depth
     def __repr__(self):
         items = self.items()
         items = [ stripper(i,j) for i,j in items]
-        return '%s(%s)' % (self.name, items)
-
-FILE = 'test3.zml' # 'test.zml'
+        indents = '\n' + ':' * (self.depth + 2)
+        return '%s%s(%s)' % (indents, self.name, items)
+FILE = 'test3.zml'
 
 nalpha = re.compile(r'[^a-zA-Z]')  # check for actual text
 special_re = re.compile(r'(:{2}.?)') # starts with two colons
@@ -83,7 +85,7 @@ for line in lines:
                     # this is a direct child
                     if prop in parent:
                         print conflict_msg(prop, depth)
-                    parent[prop] = odict(prop)
+                    parent[prop] = odict(prop, depth)
                     # insert name of self into parent
                 else:
                     length = len(parent)
@@ -92,7 +94,7 @@ for line in lines:
                         parent = parent[pkey]
                     else:
                         print skipped_lvl_msg(prop, depth)
-                        parent[prop] = odict(prop)
+                        parent[prop] = odict(prop, depth)
 
 
 

@@ -1,9 +1,11 @@
+::SHALLOW A::
 ::NEW PROPERTIES::
-:::DESCRIPTION:::
-:::VALUE:::
-:::DUE:::
+:::DESCRIPTION::
+:::VALUE::
+:::DUE::
 ::STORAGE PROPERTIES::
-:::CREATED:::
-:::DESCRIPTION:::
-:::VALUE:::
-:::DUE:::
+:::CREATED::
+:::DESCRIPTION::
+:::VALUE::
+:::DUE::
+::SHALLOW B::
