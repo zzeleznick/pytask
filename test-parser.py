@@ -152,9 +152,9 @@ def parseZML(filename):
     return props
 
 def test():
-    lines = ['::Fields::', ':::name::', ':::value::', ':::lst::',
+    lines = ['::Fields::', ':::name::\n\t::junk:::\n\n', ':::value::', ':::lst::',
     '::Types::', ':::str::', ':::int::', ':::list::',
-    '::Values::', ':::Zach::', ':::2::', ':::shit::' ]
+    '::Values::', ':::Zach::', ':::2::', ':::s@$$20hit::-wewqdd:' ]
     props = get_properties(lines)
     print props, '\n'
     lst = []
