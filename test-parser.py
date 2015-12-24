@@ -4,34 +4,58 @@ from collections import OrderedDict as odict
 
 FILE = 'test.zml'
 
+nalpha = re.compile(r'[^a-zA-Z]')  # check for actual text
+special_re = re.compile(r'(:{2}.?)') # starts with two colons
+lvl_re = re.compile(r'\A:{1,}') # colons at start of line
+depthfnc = lambda x: len((lvl_re.search(x)).group()) if lvl_re.search(x) else 0
+conflict_msg = lambda m: '''1st level properties must not have the same name.
+Found Conflicting name "%s".''' % m
+null_parent_msg = lambda m: '''Child properties must be linked to a parent.
+No parent properties found, but attempted to add "%s".''' % m
+
 with open(FILE, 'r') as infile:
     lines = infile.readlines()
 
 print lines
 # scrub the file and only extract valid lines
-
-nalpha = re.compile(r'[^a-zA-Z]')  # check for actual text
 valids = [ i for i, l in enumerate(lines) if len(nalpha.sub('', l)) > 0]
 # each lines must be contain least one letter
 lines = [lines[i] for i in valids]
-# new_list = list(chain(a[0:2], [a[4]], a[6:]))
-special = re.compile(r'(:{2}.?)') # starts with two colons
 
 properties = odict()
 for line in lines:
-    iterator = special.finditer(line)
+    iterator = special_re.finditer(line)
     matches = [ m.span() for m in iterator ]
-    # get all double colons
-    limit = min(2, len(matches))
-    vals = range(1, limit, 2)
-    groups = [(matches[i-1][1]-1, matches[i][0]) for i in vals]
-    # take the end of 1st dbl colon and start of next
-    if lst:
-        prop = [line[b:e] for i, (b,e) in enumerate(lst) if i == 0 ][0]
-        # get the first matching property
-        print 'Dirty matches', prop
-        prop = nalpha.sub('', prop) # properties must be alpha only
-        print 'Clean matches', prop
-        if prop:
-            properties += [prop]
+    # gets all double colons, and we want the contents between
+    limit = min(2, len(matches)) # force 1st match
+    vals = range(1, limit, 2)    # for easy grouping
+    hits = [(matches[i-1][0], matches[i][0]) for i in vals]
+    if not hits: continue
+    start, end = hits[0]
+    special = line[start:end]
+    # list of start and end characters for a property
+    # should just take one per line
+    if special:
+        rawkey = special # the raw text including sp chars
+        print rawkey
+        prop = nalpha.sub('', rawkey).upper()
+        # store them in A-Z only with clean, non-conflicting names
+        depth = depthfnc(rawkey)
+        # the depth (i.e. number of lhs colons)
+        if depth == 2:
+            assert len(prop) > 1, "Did not check valid lines correctly"
+            old = properties.get(prop)
+            if not old:
+                properties[prop] = [] # list to store child props
+            else:
+                raise(IOError(conflict_msg(prop)))
+        else:
+            count = len(properties)
+            assert count > 0, null_parent_msg(prop)
+            parent = properties.keys()[count - 1]
+            old = properties[parent]
+            if not old:
+                properties[parent] = [prop]
+            else:
+                properties[parent] = old + [prop]
 print properties
