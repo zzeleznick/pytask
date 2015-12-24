@@ -1,11 +1,7 @@
+import ast
 from collections import OrderedDict as odict
 
-iterReq = lambda d, x: "Arg '%s' of %s must be iterable." % (d, type(x))
-sameLengthReq = lambda x, y: 'Fields (%d) and Types (%d) must have same length.' % (len(x), len(y))
-CMD = lambda x: x.strip().upper()
-checkHelp = lambda x: 1 if (CMD(x) == 'H' or CMD(x) == 'HELP') else 0
-checkExit = lambda x: 1 if (CMD(x) == 'X' or CMD(x) == 'Q' or CMD(x) == 'QUIT') else 0
-checkUndo =  lambda x: 1 if (CMD(x) == 'B' or CMD(x) == 'U' or CMD(x) == 'UNDO') else 0
+from utils import *
 
 class Command(object):
     def __init__(self, text):
@@ -47,6 +43,7 @@ class Schema(object):
         """Test we built internals correctly"""
         for name in internals:
             val = internals[name]
+            val = str(val) # will be converted with user input
             if not self.is_valid(name, val) and raisesError:
                 raise(self.is_valid(name, val, returnError = True))
             elif not self.is_valid(name, val):
@@ -60,49 +57,82 @@ class Schema(object):
         assert '__iter__' in dir(fds), iterReq('fields', fds)
         assert '__iter__' in dir(exp), iterReq('expected_types', exp)
         assert len(fds) == len(exp), sameLengthReq(fds, exp)
+        valid_types = {str, int, list, set, dict, tuple, bool}
+        for f in self.expected:
+            t = self.expected[f]
+            if t not in valid_types:
+                print 'Must use types from the set %s' % valid_types
+                raise(IOError("Invalid Type '%s' Found." % (t)))
+            try:
+                x = t()
+            except Exception, e:
+                 print "ERROR: '%s' Expected must be a callable type" % t
+                 raise e
         return True
 
     def build_defaults(self, fields, defaults):
         """Assume it works, then test if it works"""
-        assert '__iter__' in dir(defaults), iterReq('defaults', defaults)
-        if defaults:
-            if len(defaults) != len(fields):
-                defaults = [defaults[0]]* len(fields)
-        else:
-            defaults = [self.null] * len(fields)
+        # assert '__iter__' in dir(defaults), iterReq('defaults', defaults)
+        if not defaults or '__iter__' not in dir(defaults):
+            defaults = []
+        if len(defaults) != len(fields):
+            print 'WARNING: mismatched lengths of defaults and expected_types'
+            print 'Found (%d) instead of (%d)' % (len(defaults), len(fields))
+            print '>>> OVERRIDING DEFAULTS TO EXPECTED TYPES W/O ARGS'
+            defaults = [ self.expected[f]() for f in self.expected ]
+
         return defaults
 
     def is_valid(self, name, value, returnError = False):
         """Checks a value for type validity from the expected Types"""
         convert = self.expected[name]
+        if convert == str:
+            # only worry about int, list, etc;
+            return True
         try:
-            parsed = convert(value)
+            val = ast.literal_eval(value)
+            '''
+            Safely evaluate an expression node or a Unicode or Latin-1 encoded string containing a Python literal or container display.
+            The string or node provided may only consist of the following
+            Python literal structures: strings, numbers, tuples, lists, dicts, booleans, and None.
+            '''
         except Exception, e:
             if returnError:
                 return e
             else:
+                print "Tried %s(%s), but failed." % (convert.__name__, value)
+                print e
                 return False
         else:
-            return True
+            return type(val) == convert
 
     def fill_field(self, name, value = None, throwError = False):
         """At this point, all default values are of correct type"""
-        if self.is_valid(name, value):
+        # print "User inputted '%s'" % value
+        if value and self.is_valid(name, value):
             convert = self.expected[name]
-            converted = convert(value)
-            self.values[name] = converted
+            if convert == str:
+                converted = value
+            else:
+                converted = ast.literal_eval(value)
         elif throwError:
              raise(self.is_valid(name, value, returnError = True))
         else:
             if value:  # wasn't valid, but inputted
-                self.values[name] = self.null
+                converted = self.null
             else:
-                self.values[name] = self.defaults[name]
+                print ">>> Invalid Input."
+                converted = self.defaults[name]
+                if converted:
+                    print ">>> Defaulting to default value '%s'.\n>>> Press 'u' to undo." % self.defaults[name]
+        if converted:
+            self.values[name] = converted
+
 
     def __repr__(self):
         head = '|--=s %s s=--|' % self.name
         end =  '|--=e %s e=--|' % self.name
-        fields = ["'%s': %s" % (k, self.values[k]) for k in self.values]
+        fields = ["'%s': {%s} [%s]" % (k, self.values[k], self.defaults[k]) for k in self.fields]
         expected = ["%s" % (self.expected[k]) for k in self.expected]
         pairs = zip(fields, expected)
         lines = [', '.join(pair) for pair in pairs]
@@ -116,8 +146,8 @@ class Form(Schema):
                  promptFncs = [], helpFncs = []):
         super(Form, self).__init__(fields, expected_types, defaults)
         self.name = 'Form'
-        self._prompt = lambda x,y: lambda: "Enter a %s into field '%s'" % (x,y)
-        self._help = lambda x,y: lambda: '<insert> value into %s' % (y)
+        self._prompt = lambda x,y: lambda: "> Enter a %s into field '%s'." % (x,y)
+        self._help = lambda x,y: lambda: "\n>> You need to fill in the field '%s' before we move on." % (y)
         self.prompts = self.buildHelpMessages(promptFncs, fallback = self._prompt )
         self.helpers = self.buildHelpMessages(helpFncs, fallback = self._help )
         self.incomplete = self.checkForMissingValues
@@ -175,7 +205,7 @@ class Form(Schema):
             self.fill_field(name, raw)
             out = self.values[name]
             if out:
-                print "Adding %s to field '%s'." % (out, name)
+                # print "Adding %s to field '%s'." % (out, name)
                 self.counter += 1
 
     def proccess(self):
