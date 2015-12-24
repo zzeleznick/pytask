@@ -194,6 +194,11 @@ def build_Form(FEVlst):
     '''
     fields, exp, vals = FEVlst
     assert len(fields) == len(exp) and len(exp) == len(vals)
+    valid_types = {'str', 'int', 'list', 'set', 'dict', 'tuple', 'bool'}
+    for ex in exp:
+        if ex not in valid_types:
+            print 'Must use types from the set %s' % valid_types
+            raise(IOError("Invalid Type '%s' Found." % (ex)))
     expected = [eval(ex) for ex in exp]
     helpers = []
     form = Form(fields, expected, vals, helpers)
@@ -216,7 +221,18 @@ def test2():
     form = Form(fields, expected, defaults, helpers)
     print form
 
+def test3():
+    fields = ['name', 'value', 'dct', 'lst']
+    expected = [str, int, dict, list]
+    # defaults = ['', '', '']
+    defaults = None
+    helpers = []
+    form = Form(fields, expected, defaults, helpers)
+    print form
+    vals = form.proccess()
+    print vals
+
 if __name__ == '__main__':
     # parseZML(FOLDER+FILE)
-    test()
-    # test2()
+    # test()
+    test3()
